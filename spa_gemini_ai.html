@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式健康掃描與 AI 營養分析</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        glassbg: 'rgba(255, 255, 255, 0.7)',
+                        glassborder: 'rgba(255, 255, 255, 0.6)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            /* 稍微調淺背景漸層，維持乾淨清爽的視覺感 */
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            margin: 0;
+            font-family: 'PingFang TC', 'Helvetica Neue', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        /* 波浪動畫定義 */
+        .wave-front {
+            animation: wave-move 3.5s infinite linear;
+        }
+        .wave-back {
+            animation: wave-move 5s infinite linear reverse;
+            opacity: 0.6;
+        }
+        @keyframes wave-move {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-200px); }
+        }
+
+        /* 順滑的水位高度與顏色過渡 */
+        #water-level {
+            transition: transform 0.1s ease-out;
+        }
+        .fluid-color {
+            transition: fill 0.4s ease, stop-color 0.4s ease;
+        }
+
+        /* 自訂拉桿樣式 - 滑順無段落感 */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 14px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            outline: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 4px solid var(--active-color, #4ade80);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+
+        /* SPA 轉場動畫與自訂 UI 元件 */
+        .stage-container {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .stage-container.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        /* Chart.js Container */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            height: 300px;
+        }
+
+        /* Checkbox Customization */
+        .custom-checkbox:checked + div {
+            background-color: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .custom-checkbox:checked + div span {
+            font-weight: 700;
+        }
+        .custom-checkbox:checked + div .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        /* AI Loading Spinner */
+        .ai-spinner {
+            border: 3px solid rgba(148, 163, 184, 0.2);
+            border-top-color: #475569;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Scrollbar styling for product list */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 md:p-8">
+
+    <!-- ================= STAGE 1: 自我評估 (Gamified Scan) ================= -->
+    <section id="stage-1" class="stage-container active max-w-6xl w-full mx-auto flex-col md:flex-row gap-8 lg:gap-12 items-center">
+        <!-- 左側：巨大人體輪廓、波浪動畫與 HUD 連線 -->
+        <div class="w-full md:w-1/2 flex justify-center items-center h-[45vh] md:h-[80vh] relative">
+            <svg viewBox="0 0 200 500" class="w-full h-full max-h-[85vh] drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)] overflow-visible">
+                <defs>
+                    <clipPath id="bodyMask">
+                        <path d="M 100 10 A 35 35 0 1 0 100 80 A 35 35 0 1 0 100 10 Z" />
+                        <path d="M 100 95 C 50 95, 25 120, 25 160 L 25 270 A 15 15 0 0 0 55 270 L 55 190 L 60 190 L 60 450 A 18 18 0 0 0 96 450 L 96 280 L 104 280 L 104 450 A 18 18 0 0 0 140 450 L 140 190 L 145 190 L 145 270 A 15 15 0 0 0 175 270 L 175 160 C 175 120, 150 95, 100 95 Z" />
+                    </clipPath>
+                    <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--wave-light)" class="fluid-color" />
+                        <stop offset="100%" stop-color="var(--wave-dark)" class="fluid-color" />
+                    </linearGradient>
+                </defs>
+
+                <!-- 遮罩區域：波浪主體 -->
+                <g clip-path="url(#bodyMask)">
+                    <rect width="200" height="500" fill="#cbd5e1" />
+                    <g id="water-level" style="transform: translateY(420px);">
+                        <path class="wave-back fluid-color" fill="var(--wave-dark)" d="M 0 0 Q 50 -18, 100 0 T 200 0 T 300 0 T 400 0 L 400 600 L 0 600 Z" />
+                        <path class="wave-front fluid-color" fill="url(#waveGradient)" d="M 0 0 Q 50 -12, 100 0 T 200 0 T 300 0 T 400 0 L 400 600 L 0 600 Z" />
+                    </g>
+                </g>
+
+                <path d="M 100 10 A 35 35 0 1 0 100 80 A 35 35 0 1 0 100 10 Z" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="8" opacity="0.8"/>
+                <path d="M 100 95 C 50 95, 25 120, 25 160 L 25 270 A 15 15 0 0 0 55 270 L 55 190 L 60 190 L 60 450 A 18 18 0 0 0 96 450 L 96 280 L 104 280 L 104 450 A 18 18 0 0 0 140 450 L 140 190 L 145 190 L 145 270 A 15 15 0 0 0 175 270 L 175 160 C 175 120, 150 95, 100 95 Z" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="8" opacity="0.8"/>
+
+                <!-- 右側指示連線 -->
+                <g class="hidden md:inline" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-dasharray="4 4" fill="none">
+                    <circle cx="100" cy="50" r="5" fill="rgba(255,255,255,0.9)" stroke="none" />
+                    <path d="M 100 50 L 210 50" />
+                    <circle cx="210" cy="50" r="3" fill="rgba(255,255,255,0.6)" stroke="none" />
+
+                    <circle cx="100" cy="140" r="5" fill="rgba(255,255,255,0.9)" stroke="none" />
+                    <path d="M 100 140 L 210 140" />
+                    <circle cx="210" cy="140" r="3" fill="rgba(255,255,255,0.6)" stroke="none" />
+
+                    <circle cx="100" cy="240" r="5" fill="rgba(255,255,255,0.9)" stroke="none" />
+                    <path d="M 100 240 L 210 240" />
+                    <circle cx="210" cy="240" r="3" fill="rgba(255,255,255,0.6)" stroke="none" />
+
+                    <circle cx="100" cy="380" r="5" fill="rgba(255,255,255,0.9)" stroke="none" />
+                    <path d="M 100 380 L 210 380" />
+                    <circle cx="210" cy="380" r="3" fill="rgba(255,255,255,0.6)" stroke="none" />
+                </g>
+            </svg>
+        </div>
+
+        <!-- 右側：現代化互動拉桿選單 -->
+        <div class="w-full md:w-1/2 flex flex-col justify-around gap-6 glass-panel p-8 md:p-10 rounded-[2.5rem] min-h-[60vh]">
+            <div class="mb-2">
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-wide mb-2">健康日常掃描</h2>
+                <p class="text-slate-600 text-[15px] font-medium tracking-wide">請依照目前的身體感受，拖曳滑桿分數～</p>
+            </div>
+
+            <div class="flex flex-col gap-6 w-full">
+                <!-- 指標一：頭腦狀態 -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-white rounded-xl text-slate-600 shadow-sm border border-slate-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+                        </div>
+                        <span class="text-lg font-bold text-slate-700 tracking-wide flex-grow">頭腦狀態</span>
+                    </div>
+                    <!-- 使用 step="0.01" 達成無段落的滑順感 -->
+                    <input type="range" id="head" min="0" max="10" step="0.01" value="2" class="slider">
+                </div>
+
+                <!-- 指標二：外表膚況 -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-white rounded-xl text-slate-600 shadow-sm border border-slate-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                        </div>
+                        <span class="text-lg font-bold text-slate-700 tracking-wide flex-grow">外表膚況</span>
+                    </div>
+                    <input type="range" id="skin" min="0" max="10" step="0.01" value="2" class="slider">
+                </div>
+
+                <!-- 指標三：循環代謝 -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-white rounded-xl text-slate-600 shadow-sm border border-slate-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                        </div>
+                        <span class="text-lg font-bold text-slate-700 tracking-wide flex-grow">循環代謝</span>
+                    </div>
+                    <input type="range" id="gut" min="0" max="10" step="0.01" value="2" class="slider">
+                </div>
+
+                <!-- 指標四：運動機能 -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-white rounded-xl text-slate-600 shadow-sm border border-slate-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <span class="text-lg font-bold text-slate-700 tracking-wide flex-grow">運動機能</span>
+                    </div>
+                    <input type="range" id="lower" min="0" max="10" step="0.01" value="2" class="slider">
+                </div>
+            </div>
+
+            <!-- 下一步按鈕，移除懸浮動畫保持沉穩 -->
+            <button id="btn-next-stage1" class="mt-4 w-full py-4 rounded-2xl bg-slate-800 text-white font-bold text-lg shadow-xl shadow-slate-800/20 hover:bg-slate-700 transition-colors">
+                下一步 ➔
+            </button>
+        </div>
+    </section>
+
+    <!-- ================= STAGE 2: 症狀掃描 (雙軌動態分流系統) ================= -->
+    <section id="stage-2" class="stage-container max-w-4xl w-full mx-auto flex-col glass-panel p-8 md:p-12 rounded-[2.5rem]">
+        
+        <!-- Track A: Improvement Mode -->
+        <div id="track-a-content" class="hidden flex-col gap-6">
+            <div class="border-b border-slate-300/50 pb-4">
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-wide mt-3">重點健康痛點分析</h2>
+                <p class="text-[15px] text-slate-600 mt-2 font-medium">根據您剛才的掃描，我們整理出最可能影響您的幾項痛點。請勾選您目前最困擾的項目（可複選）：</p>
+            </div>
+            <div id="symptoms-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <!-- Javascript will populate this -->
+            </div>
+        </div>
+
+        <!-- Track B: Optimization Mode -->
+        <div id="track-b-content" class="hidden flex-col gap-6">
+            <div class="border-b border-slate-300/50 pb-4">
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-wide mt-3">恭喜您！您的健康狀態非常出色！</h2>
+                <p class="text-[15px] text-slate-600 mt-2 font-medium">讓我們繼續維持最佳的狀態或優化吧！請勾選您希望進一步提升的目標（可複選）：</p>
+            </div>
+            <div id="goals-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <!-- Javascript will populate this -->
+            </div>
+        </div>
+
+        <div class="mt-8 flex justify-between gap-4">
+            <button class="btn-back px-6 py-3 rounded-xl bg-white/50 text-slate-700 font-bold hover:bg-white transition-colors border border-slate-200">
+                ⬅ 上一步
+            </button>
+            <button id="btn-next-stage2" class="px-8 py-3 rounded-xl bg-slate-800 text-white font-bold shadow-lg hover:bg-slate-700 transition-colors">
+                下一步 ➔
+            </button>
+        </div>
+    </section>
+
+    <!-- ================= STAGE 3: 情境分流 (僅 Track A) ================= -->
+    <section id="stage-3" class="stage-container max-w-4xl w-full mx-auto flex-col glass-panel p-8 md:p-12 rounded-[2.5rem]">
+        <div class="border-b border-slate-300/50 pb-4">
+            <h2 class="text-3xl font-extrabold text-slate-800 tracking-wide mt-3">日常習慣與環境因子</h2>
+            <p class="text-[15px] text-slate-600 mt-2 font-medium">系統已根據您的痛點反向分析。請勾選以下符合您近期生活的習慣，幫助我們更精準地推薦營養素：</p>
+        </div>
+        
+        <div id="habits-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+            <!-- Javascript will populate this -->
+        </div>
+
+        <div class="mt-8 flex justify-between gap-4">
+            <button class="btn-back px-6 py-3 rounded-xl bg-white/50 text-slate-700 font-bold hover:bg-white transition-colors border border-slate-200">
+                ⬅ 上一步
+            </button>
+            <button id="btn-next-stage3" class="px-8 py-3 rounded-xl bg-slate-800 text-white font-bold shadow-lg hover:bg-slate-700 transition-colors">
+                生成專屬報告 ➔
+            </button>
+        </div>
+    </section>
+
+    <!-- ================= STAGE 4: 營養分析與產品生成 ================= -->
+    <section id="stage-4" class="stage-container max-w-5xl w-full mx-auto flex-col gap-6">
+        
+        <!-- Header Banner -->
+        <div class="glass-panel p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-wide mt-3">精準營養與健康建議</h2>
+                <p class="text-[15px] text-slate-600 mt-2 font-medium">結合您的生理評分與生活型態，我們為您規劃了專屬的營養修護路徑。</p>
+            </div>
+            <div class="chart-wrapper w-full max-w-[280px] h-[220px]">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left Column: AI Summary & Nutrients -->
+            <div class="lg:col-span-7 flex flex-col gap-6">
+                <!-- Gemini AI Personalized Summary (Styled to be flat and uniform) -->
+                <div class="glass-panel p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-[15px] font-bold text-slate-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">✨ AI 專屬健康顧問解析</span>
+                    </div>
+                    <div id="ai-summary-content" class="text-slate-700 text-[15px] leading-relaxed min-h-[80px]">
+                        <div class="flex items-center gap-3 text-slate-400">
+                            <div class="ai-spinner"></div>
+                            <span>AI 正在為您綜合評估數據，生成專屬建議中...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core Nutrients -->
+                <div class="glass-panel p-6 rounded-[2rem]">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
+                        <span>🔑</span> 推薦補充之核心營養素
+                    </h3>
+                    <div id="nutrients-list" class="flex flex-col gap-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Product Recommendations -->
+            <div class="lg:col-span-5 glass-panel p-6 rounded-[2rem] flex flex-col">
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg shrink-0">
+                    <span>🛒</span> 專屬 Market Taiwan 推薦清單
+                </h3>
+                <div id="products-list" class="flex flex-col gap-4 overflow-y-auto flex-1 min-h-[400px] lg:min-h-0 pr-2 custom-scrollbar">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="glass-panel p-6 rounded-[2rem] flex flex-col sm:flex-row justify-center items-center gap-4">
+            <button id="btn-restart" class="px-6 py-3 rounded-xl bg-white/50 text-slate-700 font-bold hover:bg-white transition-colors border border-slate-200 shadow-sm">
+                🔄 再測一次
+            </button>
+            <button id="btn-share" class="px-8 py-3 rounded-xl bg-slate-800 text-white font-bold shadow-lg hover:bg-slate-700 transition-colors">
+                🔗 分享專屬菜單
+            </button>
+        </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+        已複製到剪貼簿！
+    </div>
+
+    <script>
+        // --- DATA DICTIONARIES & DATABASES ---
+
+        // Symptoms Data (Track A) - Array with weights
+        const SYMPTOMS_DB = [
+            { id: '1-1', text: '失眠或睡眠障礙', metric: 'head', weight: 100 },
+            { id: '3-1', text: '消化不良或脹氣', metric: 'gut', weight: 95 },
+            { id: '1-5', text: '焦慮煩躁壓力大', metric: 'head', weight: 90 },
+            { id: '3-2', text: '便秘或排便不順', metric: 'gut', weight: 85 },
+            { id: '2-3', text: '肌膚泛紅與敏弱', metric: 'skin', weight: 80 },
+            { id: '2-2', text: '粉刺痘痘與痘疤', metric: 'skin', weight: 70 },
+            { id: '2-1', text: '皮膚乾燥脫屑', metric: 'skin', weight: 60 },
+            { id: '2-5', text: '皺紋鬆弛與老化', metric: 'skin', weight: 55 },
+            { id: '2-4', text: '斑點與色素沈澱', metric: 'skin', weight: 50 },
+            { id: '1-4', text: '頭暈或緊繃', metric: 'head', weight: 45 },
+            { id: '1-3', text: '精神渙散、分心', metric: 'head', weight: 40 },
+            { id: '4-2', text: '運動沒力或表現差', metric: 'lower', weight: 35 },
+            { id: '1-2', text: '眼睛疲勞', metric: 'head', weight: 32 },
+            { id: '4-4', text: '關節僵硬', metric: 'lower', weight: 30 },
+            { id: '3-3', text: '腸胃敏感或食慾不振', metric: 'gut', weight: 25 },
+            { id: '3-5', text: '手腳冰冷循環差', metric: 'gut', weight: 20 },
+            { id: '4-3', text: '私密機能與保養', metric: 'lower', weight: 18 },
+            { id: '3-4', text: '代謝停滯修復慢', metric: 'gut', weight: 15 },
+            { id: '4-1', text: '運動痠痛疲勞', metric: 'lower', weight: 10 },
+            { id: '2-6', text: '落髮稀疏與出油', metric: 'skin', weight: 5 }
+        ];
+
+        // Goals Data (Track B)
+        const GOALS_DB = [
+            { id: 'g1', text: '高品質睡眠', mappedSymptom: '1-1' },
+            { id: 'g2', text: '提升精神與專注力', mappedSymptom: '1-3' },
+            { id: 'g3', text: '透亮白皙好氣色', mappedSymptom: '2-4' },
+            { id: 'g4', text: '抗老與肌膚緊緻', mappedSymptom: '2-5' },
+            { id: 'g5', text: '每日順暢排空', mappedSymptom: '3-2' },
+            { id: 'g6', text: '消化代謝與吸收', mappedSymptom: '3-4' },
+            { id: 'g7', text: '提升運動表現', mappedSymptom: '4-2' },
+            { id: 'g8', text: '私密機能與保養', mappedSymptom: '4-3' }
+        ];
+
+        // Habits Data & Mapping
+        const HABITS_DICT = {
+            'a': '長時間盯螢幕', 'b': '長期久坐或缺乏運動', 'c': '熬夜或作息不正常', 'd': '喝太少水',
+            'e': '喝太多酒或咖啡', 'f': '飲食不健康', 'g': '空氣或環境品質差', 'h': '高強度工作或運動'
+        };
+        const HABIT_MAP = {
+            '1-1': ['c','e'], '1-2': ['a','c'], '1-3': ['a','c','e'], '1-4': ['a','h'], '1-5': ['c','h'], 
+            '2-1': ['d','g'], '2-2': ['c','f'], '2-3': ['g','f'], '2-4': ['c','g'], '2-5': ['c','g'], '2-6': ['c','f'],
+            '3-1': ['e','f'], '3-2': ['d','f','b'], '3-3': ['c','e'], '3-4': ['b','c'], '3-5': ['b','d'],
+            '4-1': ['h'], '4-2': ['b','c'], '4-3': ['c','d'], '4-4': ['b']
+        };
+
+        // Extracted Product Database (Based on provided Catalog, strictly de-branded descriptions)
+        const PRODUCT_DB = [
+            {
+                name: '葡萄籽、松樹皮、紅酒萃取精華粉末 (OPC-3)', brand: 'Isotonix', price: 'NT$2,810',
+                nutrient: '葡萄籽、紅酒萃取物與生物類黃酮', 
+                nutrientDesc: '提供強效的抗氧化基底，全方位促進新陳代謝與微循環，有效舒緩不適並幫助氣色提亮。',
+                desc: '明星產品。全方位促進新陳代謝與循環，是所有保健與保養菜單中最不可或缺的百搭基底。',
+                tags: ['抗氧化', '養顏美容'], triggers: ['1-4','2-3','2-4','3-5']
+            },
+            {
+                name: '益生消化酵素粉末', brand: 'Isotonix', price: 'NT$1,330',
+                nutrient: '綜合消化酵素與益生菌', 
+                nutrientDesc: '幫助有效分解澱粉、蛋白質與脂肪，減輕餐後負擔，同時維持腸道良好生態。',
+                desc: '針對餐後食物分解，改善脹氣與消化不良，含益生菌，提升營養吸收率。',
+                tags: ['消化機能'], triggers: ['3-1','3-2','3-3']
+            },
+            {
+                name: '複方維生素 B 粉末', brand: 'Isotonix', price: 'NT$2,110',
+                nutrient: '活化 B 群 (B1~B12)、葉酸、鎂', 
+                nutrientDesc: '高效幫助胺基酸與能量正常代謝，維持神經系統健康，是高壓熬夜族的長效提神樞紐。',
+                desc: '完整涵蓋維生素B群並添加鈣與鎂。等滲透劑型能高效幫助代謝，專門針對高壓與熬夜族群。',
+                tags: ['能量體力', '神經系統'], triggers: ['1-1','1-3','1-5']
+            },
+            {
+                name: '固可寧粉末', brand: 'Isotonix', price: 'NT$2,990',
+                nutrient: '葡萄糖胺與高吸收率薑黃萃取物', 
+                nutrientDesc: '針對關節與軟骨提供高生物利用率的舒緩與修復營養，維持運動與日常的靈活度。',
+                desc: '針對關節與軟骨保養，含葡萄糖胺與薑黃，適合長輩或高強度運動者。',
+                tags: ['骨骼關節'], triggers: ['4-1','4-2','4-4']
+            },
+            {
+                name: '平泰秀®青春配方', brand: 'Pentaxyl®', price: 'NT$2,965',
+                nutrient: '多重頂級胜肽與亮白草本萃取', 
+                nutrientDesc: '能顯著淡化深層紋理，改善肌膚黯沉，由內而外恢復肌膚應有的彈力與緊緻。',
+                desc: '全方位抗老與撫平細紋，擦的膠原蛋白啟動器。臉部與身體皆適用。',
+                tags: ['外在保養'], triggers: ['2-2','2-5','2-1']
+            },
+            {
+                name: 'Prime™ 菸鹼醯胺 D-核糖複方凍', brand: 'Prime™', price: 'NT$1,815',
+                nutrient: 'NAD+ 前驅物 (D-核糖、菸鹼醯胺) 與白藜蘆醇', 
+                nutrientDesc: '為細胞提供深層能量，促進新陳代謝並集中專注力，是吃進去的深層賦活營養。',
+                desc: '深層賦活與細胞能量。幫助促進新陳代謝、集中專注力，協助維持透亮氣色。',
+                tags: ['能量體力', '養顏美容'], triggers: ['1-3','3-4']
+            },
+            {
+                name: '莓果配方粉末', brand: 'Isotonix', price: 'NT$2,825',
+                nutrient: '蔓越莓、藍莓、接骨木果等植萃精華',
+                nutrientDesc: '精準專攻女性私密呵護與健康保養，同時提供絕佳的抗氧化力與清爽感受。',
+                desc: '頂級植萃精華大集合！精準有效地專攻女性私密呵護，是女孩們不可或缺的內在保養。',
+                tags: ['私密呵護'], triggers: ['4-3']
+            }
+        ];
+
+        // App State FSM
+        const state = {
+            stage: 1,
+            scores: { head: 2, skin: 2, gut: 2, lower: 2 },
+            track: null, // 'A' or 'B'
+            symptoms: [],
+            goals: [],
+            habits: []
+        };
+
+        let radarChartInstance = null;
+
+        // --- STREAMING_CHUNK:Stage 1 Slider Visualization ---
+        const sliders = ['head', 'skin', 'gut', 'lower'];
+        
+        function updateVisuals() {
+            let totalScore = 0;
+            sliders.forEach(id => {
+                const el = document.getElementById(id);
+                const value = parseFloat(el.value);
+                totalScore += value;
+                state.scores[id] = value;
+                
+                const percent = (value / 10) * 100;
+                el.style.background = `linear-gradient(to right, var(--active-color, #4ade80) ${percent}%, #cbd5e1 ${percent}%)`;
+            });
+
+            const normalizedRatio = totalScore / 40;
+            const hue = 350 + (normalizedRatio * 160); 
+            const finalHue = hue > 360 ? hue - 360 : hue; 
+            
+            const mainColor = `hsl(${finalHue}, 85%, 55%)`;
+            const lightColor = `hsl(${finalHue}, 90%, 65%)`;
+            const darkColor = `hsl(${finalHue}, 80%, 45%)`;
+
+            document.documentElement.style.setProperty('--active-color', mainColor);
+            document.documentElement.style.setProperty('--wave-light', lightColor);
+            document.documentElement.style.setProperty('--wave-dark', darkColor);
+
+            const maxWaterY = 420; 
+            const minWaterY = 50;  
+            const waterY = maxWaterY - (normalizedRatio * (maxWaterY - minWaterY));
+            
+            document.getElementById('water-level').style.transform = `translateY(${waterY}px)`;
+        }
+
+        // Bind slider events
+        sliders.forEach(id => {
+            document.getElementById(id).addEventListener('input', updateVisuals);
+        });
+
+        // Initialize Stage 1
+        updateVisuals();
+
+
+        // --- STREAMING_CHUNK:Stage Navigation & Dynamic Render Logic ---
+        function switchStage(newStage) {
+            document.querySelectorAll('.stage-container').forEach(el => el.classList.remove('active'));
+            state.stage = newStage;
+            
+            if (newStage === 4) {
+                document.getElementById(`stage-${newStage}`).classList.add('active');
+                renderStage4();
+            } else {
+                document.getElementById(`stage-${newStage}`).classList.add('active');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Stage 1 -> Stage 2
+        document.getElementById('btn-next-stage1').addEventListener('click', () => {
+            const minScore = Math.min(state.scores.head, state.scores.skin, state.scores.gut, state.scores.lower);
+            if (minScore < 7) {
+                state.track = 'A';
+                document.getElementById('track-a-content').classList.remove('hidden');
+                document.getElementById('track-a-content').classList.add('flex');
+                document.getElementById('track-b-content').classList.add('hidden');
+                document.getElementById('track-b-content').classList.remove('flex');
+                renderTrackASymptoms();
+            } else {
+                state.track = 'B';
+                document.getElementById('track-b-content').classList.remove('hidden');
+                document.getElementById('track-b-content').classList.add('flex');
+                document.getElementById('track-a-content').classList.add('hidden');
+                document.getElementById('track-a-content').classList.remove('flex');
+                renderTrackBGoals();
+            }
+            switchStage(2);
+        });
+
+        // Render Checkboxes with Text sizing adjusted
+        function createCheckboxHTML(id, text, type) {
+            const checked = state[type].includes(id) ? 'checked' : '';
+            return `
+                <label class="cursor-pointer relative block">
+                    <input type="checkbox" value="${id}" class="custom-checkbox sr-only ${type}-cb" ${checked}>
+                    <div class="px-5 py-4 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center gap-4 transition-all hover:border-slate-300">
+                        <div class="w-6 h-6 flex-shrink-0 rounded-[6px] border border-slate-300 flex items-center justify-center bg-white">
+                            <svg class="w-4 h-4 text-slate-700 opacity-0 transform scale-50 transition-all check-icon" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <span class="text-slate-700 text-[16px] md:text-[18px] font-medium leading-tight">${text}</span>
+                    </div>
+                </label>
+            `;
+        }
+
+        function renderTrackASymptoms() {
+            const grid = document.getElementById('symptoms-grid');
+            let validSymptoms = SYMPTOMS_DB.filter(s => state.scores[s.metric] < 7);
+            validSymptoms.sort((a, b) => b.weight - a.weight);
+            validSymptoms = validSymptoms.slice(0, 10); // Enforce max 10
+            
+            grid.innerHTML = validSymptoms.map(s => createCheckboxHTML(s.id, s.text, 'symptoms')).join('');
+            
+            document.querySelectorAll('.symptoms-cb').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    if (e.target.checked) state.symptoms.push(e.target.value);
+                    else state.symptoms = state.symptoms.filter(id => id !== e.target.value);
+                });
+            });
+        }
+
+        function renderTrackBGoals() {
+            const grid = document.getElementById('goals-grid');
+            grid.innerHTML = GOALS_DB.map(g => createCheckboxHTML(g.id, g.text, 'goals')).join('');
+            
+            document.querySelectorAll('.goals-cb').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    if (e.target.checked) state.goals.push(e.target.value);
+                    else state.goals = state.goals.filter(id => id !== e.target.value);
+                });
+            });
+        }
+
+        // Stage 2 -> Stage 3 (or 4)
+        document.getElementById('btn-next-stage2').addEventListener('click', () => {
+            if (state.track === 'A') {
+                renderStage3Habits();
+                switchStage(3);
+            } else {
+                switchStage(4);
+            }
+        });
+
+        // --- STREAMING_CHUNK:Stage 3 Logic ---
+        function renderStage3Habits() {
+            const grid = document.getElementById('habits-grid');
+            let habitSet = new Set();
+            
+            state.symptoms.forEach(symId => {
+                const hArr = HABIT_MAP[symId] || [];
+                hArr.forEach(h => habitSet.add(h));
+            });
+
+            let habitKeys = Array.from(habitSet);
+            
+            const defaultOrder = ['c', 'b', 'a', 'd', 'f', 'e', 'g', 'h'];
+            let idx = 0;
+            while (habitKeys.length < 4 && idx < defaultOrder.length) {
+                if (!habitKeys.includes(defaultOrder[idx])) habitKeys.push(defaultOrder[idx]);
+                idx++;
+            }
+            if (habitKeys.length > 8) habitKeys = habitKeys.slice(0, 8);
+
+            grid.innerHTML = habitKeys.map(k => createCheckboxHTML(k, HABITS_DICT[k], 'habits')).join('');
+            
+            document.querySelectorAll('.habits-cb').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    if (e.target.checked) state.habits.push(e.target.value);
+                    else state.habits = state.habits.filter(id => id !== e.target.value);
+                });
+            });
+        }
+
+        document.getElementById('btn-next-stage3').addEventListener('click', () => {
+            switchStage(4);
+        });
+
+        document.querySelectorAll('.btn-back').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (state.stage === 3) switchStage(2);
+                if (state.stage === 2) switchStage(1);
+            });
+        });
+
+        // --- STREAMING_CHUNK:Stage 4 Analysis & Product Generation ---
+        function renderStage4() {
+            renderRadarChart();
+            
+            let activeTriggers = [];
+            if (state.track === 'A') {
+                activeTriggers = state.symptoms;
+            } else {
+                activeTriggers = state.goals.map(gid => GOALS_DB.find(g => g.id === gid)?.mappedSymptom).filter(Boolean);
+            }
+
+            let recProducts = PRODUCT_DB.filter(p => p.triggers.some(t => activeTriggers.includes(t)));
+            if (recProducts.length === 0) recProducts = PRODUCT_DB.slice(0, 3);
+            recProducts = [...new Set(recProducts)].slice(0, 4);
+
+            // Render Nutrient Summary List (De-branded, concise text)
+            const nList = document.getElementById('nutrients-list');
+            nList.innerHTML = recProducts.map(p => `
+                <div class="bg-white/70 p-4 rounded-2xl border border-slate-200">
+                    <span class="text-[15px] font-bold text-slate-800 block mb-1">◆ ${p.nutrient}</span>
+                    <p class="text-[14px] text-slate-600 leading-relaxed">${p.nutrientDesc}</p>
+                </div>
+            `).join('');
+
+            // Render Product Cards (Placeholder 3D Box Icon instead of text box)
+            const pList = document.getElementById('products-list');
+            pList.innerHTML = recProducts.map(p => `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex gap-5 items-center hover:border-slate-300 transition-colors">
+                    <div class="w-16 h-16 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center overflow-hidden shadow-inner relative">
+                        ${p.image ? 
+                            `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">` : 
+                            `<div class="w-full h-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white">
+                                <svg class="w-8 h-8 opacity-90" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4h10v3H7zM8 8h8v12a2 2 0 01-2 2H10a2 2 0 01-2-2V8z"/></svg>
+                             </div>`
+                        }
+                    </div>
+                    <div class="flex-grow">
+                        <span class="text-[11px] font-bold bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-md uppercase tracking-wider">${p.brand}</span>
+                        <h4 class="font-extrabold text-slate-800 text-[15px] mt-1.5">${p.name}</h4>
+                        <p class="text-[13px] text-slate-500 mt-1 leading-relaxed line-clamp-2">${p.desc}</p>
+                        <div class="mt-2.5 text-[15px] font-black text-slate-800">${p.price}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            window.currentRecProducts = recProducts;
+            fetchGeminiAnalysis(activeTriggers);
+        }
+
+        function renderRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            if (radarChartInstance) radarChartInstance.destroy();
+
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['頭腦', '外表', '代謝', '運動'],
+                    datasets: [{
+                        label: '當前狀態',
+                        data: [state.scores.head, state.scores.skin, state.scores.gut, state.scores.lower],
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: 'rgb(99, 102, 241)',
+                        pointBackgroundColor: 'rgb(99, 102, 241)',
+                        borderWidth: 2
+                    }, {
+                        label: '理想目標',
+                        data: [9, 9, 9, 9],
+                        backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                        borderColor: 'rgb(148, 163, 184)',
+                        borderDash: [5, 5],
+                        borderWidth: 1.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { min: 0, max: 10, ticks: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- STREAMING_CHUNK:Gemini API & Utilities ---
+        async function fetchGeminiAnalysis(activeTriggers) {
+            const apiKey = ""; // API Key 留空於 Canvas 環境
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            
+            let triggerText = "";
+            if (state.track === 'A') {
+                triggerText = state.symptoms.map(id => SYMPTOMS_DB.find(s=>s.id === id)?.text).join(', ');
+            } else {
+                triggerText = state.goals.map(id => GOALS_DB.find(g=>g.id === id)?.text).join(', ');
+            }
+            const habitText = state.habits.map(h => HABITS_DICT[h]).join(', ') || '無特別標註';
+
+            const prompt = `
+            請扮演一位專業且溫暖的精準營養與健康管理顧問。
+            基於以下客戶的健康掃描資料，寫一段 100~150 字的「專屬健康分析與勉勵報告」。
+            【客戶資料】
+            - 生理評分 (滿分10)：頭腦 ${state.scores.head}, 膚況 ${state.scores.skin}, 代謝 ${state.scores.gut}, 運動 ${state.scores.lower}
+            - 關注的健康焦點：${triggerText || '整體保養'}
+            - 相關生活習慣：${habitText}
+            
+            【要求】
+            1. 語氣充滿同理心與鼓勵。
+            2. 總結其現況，並點出我們接下來推薦營養素能如何幫助他。
+            3. 使用繁體中文。
+            4. 嚴禁在文中提到任何產品的具體名稱或價格，僅聚焦於「營養方向」與「健康狀態」。
+            `;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: "Act as a compassionate, professional nutritionist." }] }
+            };
+
+            const container = document.getElementById('ai-summary-content');
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    typeWriter(text, container);
+                } else {
+                    throw new Error("Invalid response");
+                }
+            } catch (err) {
+                console.error("Gemini API Error:", err);
+                container.innerHTML = `<p>親愛的貴賓您好，根據您的掃描結果，我們已為您準備好專屬的精準營養補給方向。請參考下方的營養素建議，透過科學化的等滲透技術與植萃精華，讓我們一起邁向更平衡健康的日常！</p>`;
+            }
+        }
+
+        function typeWriter(text, element) {
+            element.innerHTML = '';
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    if (text.charAt(i) === '\n') {
+                        element.innerHTML += '<br>';
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    setTimeout(type, 15);
+                }
+            }
+            type();
+        }
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            state.symptoms = [];
+            state.goals = [];
+            state.habits = [];
+            document.querySelectorAll('.custom-checkbox').forEach(cb => cb.checked = false);
+            switchStage(1);
+        });
+
+        document.getElementById('btn-share').addEventListener('click', () => {
+            if (!window.currentRecProducts) return;
+            
+            const nutrientList = window.currentRecProducts.map(p => p.nutrient).join('\n• ');
+            const productList = window.currentRecProducts.map(p => p.name).join('\n• ');
+            
+            const shareText = `【專屬精準營養推薦清單】\n\n📌 建議補充核心營養素：\n• ${nutrientList}\n\n🛒 專屬推薦組合：\n• ${productList}\n\n(此報告由互動式健康問卷系統自動生成)`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: '專屬營養推薦清單',
+                    text: shareText
+                }).catch(err => {
+                    if (err.name !== 'AbortError') copyToClipboard(shareText);
+                });
+            } else {
+                copyToClipboard(shareText);
+            }
+        });
+
+        function copyToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const toast = document.getElementById('toast');
+                toast.classList.remove('opacity-0', 'pointer-events-none');
+                setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
+            } catch (err) {
+                console.error('Unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+    </script>
+</body>
+</html>
