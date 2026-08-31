@@ -362,11 +362,30 @@
 
         <!-- Action Buttons -->
         <div class="glass-panel p-6 rounded-[2rem] flex flex-col sm:flex-row justify-center items-center gap-4">
-            <button id="btn-restart" class="px-6 py-3 rounded-xl bg-white/50 text-slate-700 font-bold hover:bg-white transition-colors border border-slate-200 shadow-sm">
+            <button class="btn-restart px-6 py-3 rounded-xl bg-white/50 text-slate-700 font-bold hover:bg-white transition-colors border border-slate-200 shadow-sm">
                 🔄 再測一次
             </button>
             <button id="btn-share" class="px-8 py-3 rounded-xl bg-slate-800 text-white font-bold shadow-lg hover:bg-slate-700 transition-colors">
                 🔗 分享專屬菜單
+            </button>
+        </div>
+    </section>
+    
+    <!-- ================= STAGE 5: 緊急狀況 (極低分防護) ================= -->
+    <section id="stage-5" class="stage-container max-w-2xl w-full mx-auto flex-col justify-center items-center h-[70vh]">
+        <div class="glass-panel p-12 rounded-[3rem] w-full flex flex-col items-center justify-center text-center gap-6 shadow-2xl">
+            <!-- 驚嘆號 Icon -->
+            <div class="w-24 h-24 bg-red-50 text-red-500 rounded-[2rem] flex items-center justify-center mb-2 shadow-sm border border-red-100">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            
+            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-wider mb-2">請儘速就醫</h2>
+            <p class="text-slate-500 text-lg font-medium mb-4">系統偵測到您的身體狀態可能需要專業醫療人員的立即協助。</p>
+            
+            <button class="btn-restart px-8 py-4 mt-4 rounded-xl bg-slate-800 text-white font-bold text-lg shadow-lg hover:bg-slate-700 transition-colors w-full md:w-auto">
+                🔄 再測一次
             </button>
         </div>
     </section>
@@ -380,39 +399,39 @@
         // --- DATA DICTIONARIES & DATABASES ---
 
         // Symptoms Data (Track A) - Array with weights
-        const SYMPTOMS_DB = [
-            { id: '1-1', text: '失眠或睡眠障礙', metric: 'head', weight: 100 },
-            { id: '3-1', text: '消化不良或脹氣', metric: 'gut', weight: 95 },
-            { id: '1-5', text: '焦慮煩躁壓力大', metric: 'head', weight: 90 },
-            { id: '3-2', text: '便秘或排便不順', metric: 'gut', weight: 85 },
-            { id: '2-3', text: '肌膚泛紅與敏弱', metric: 'skin', weight: 80 },
-            { id: '2-2', text: '粉刺痘痘與痘疤', metric: 'skin', weight: 70 },
-            { id: '2-1', text: '皮膚乾燥脫屑', metric: 'skin', weight: 60 },
-            { id: '2-5', text: '皺紋鬆弛與老化', metric: 'skin', weight: 55 },
-            { id: '2-4', text: '斑點與色素沈澱', metric: 'skin', weight: 50 },
-            { id: '1-4', text: '頭暈或緊繃', metric: 'head', weight: 45 },
-            { id: '1-3', text: '精神渙散、分心', metric: 'head', weight: 40 },
-            { id: '4-2', text: '運動沒力或表現差', metric: 'lower', weight: 35 },
-            { id: '1-2', text: '眼睛疲勞', metric: 'head', weight: 32 },
-            { id: '4-4', text: '關節僵硬', metric: 'lower', weight: 30 },
-            { id: '3-3', text: '腸胃敏感或食慾不振', metric: 'gut', weight: 25 },
-            { id: '3-5', text: '手腳冰冷循環差', metric: 'gut', weight: 20 },
-            { id: '4-3', text: '私密機能與保養', metric: 'lower', weight: 18 },
-            { id: '3-4', text: '代謝停滯修復慢', metric: 'gut', weight: 15 },
-            { id: '4-1', text: '運動痠痛疲勞', metric: 'lower', weight: 10 },
-            { id: '2-6', text: '落髮稀疏與出油', metric: 'skin', weight: 5 }
+        const SYMPTOMS = [
+            { id: '1-1', name: '失眠或睡眠障礙', category: '1', priority: 100 },
+            { id: '3-1', name: '消化不良或脹氣', category: '3', priority: 95 },
+            { id: '1-5', name: '焦慮煩躁壓力大', category: '1', priority: 90 },
+            { id: '3-2', name: '便秘或排便不順', category: '3', priority: 85 },
+            { id: '2-3', name: '肌膚泛紅與敏弱', category: '2', priority: 80 },
+            { id: '2-2', name: '粉刺痘痘與痘疤', category: '2', priority: 70 },
+            { id: '2-1', name: '皮膚乾燥脫屑', category: '2', priority: 60 },
+            { id: '2-5', name: '皺紋鬆弛與老化', category: '2', priority: 55 },
+            { id: '2-4', name: '斑點與色素沈澱', category: '2', priority: 50 },
+            { id: '1-4', name: '頭暈或緊繃', category: '1', priority: 45 },
+            { id: '1-3', name: '精神渙散、分心', category: '1', priority: 40 },
+            { id: '4-2', name: '運動沒力或表現差', category: '4', priority: 35 },
+            { id: '1-2', name: '眼睛疲勞', category: '1', priority: 32 },
+            { id: '4-4', name: '關節僵硬', category: '4', priority: 30 },
+            { id: '3-3', name: '腸胃敏感或食慾不振', category: '3', priority: 25 },
+            { id: '3-5', name: '手腳冰冷循環差', category: '3', priority: 20 },
+            { id: '4-3', name: '私密機能與保養', category: '4', priority: 18 },
+            { id: '3-4', name: '代謝停滯修復慢', category: '3', priority: 15 },
+            { id: '4-1', name: '運動痠痛疲勞', category: '4', priority: 10 },
+            { id: '2-6', name: '落髮稀疏與出油', category: '2', priority: 5 }
         ];
 
         // Goals Data (Track B)
         const GOALS_DB = [
-            { id: 'g1', text: '高品質睡眠', mappedSymptom: '1-1' },
-            { id: 'g2', text: '提升精神與專注力', mappedSymptom: '1-3' },
-            { id: 'g3', text: '透亮白皙好氣色', mappedSymptom: '2-4' },
-            { id: 'g4', text: '抗老與肌膚緊緻', mappedSymptom: '2-5' },
-            { id: 'g5', text: '每日順暢排空', mappedSymptom: '3-2' },
-            { id: 'g6', text: '消化代謝與吸收', mappedSymptom: '3-4' },
-            { id: 'g7', text: '提升運動表現', mappedSymptom: '4-2' },
-            { id: 'g8', text: '私密機能與保養', mappedSymptom: '4-3' }
+            { id: 'g1', name: '高品質睡眠', mappedSymptom: '1-1' },
+            { id: 'g2', name: '提升精神與專注力', mappedSymptom: '1-3' },
+            { id: 'g3', name: '透亮白皙好氣色', mappedSymptom: '2-4' },
+            { id: 'g4', name: '抗老與肌膚緊緻', mappedSymptom: '2-5' },
+            { id: 'g5', name: '每日順暢排空', mappedSymptom: '3-2' },
+            { id: 'g6', name: '消化代謝與吸收', mappedSymptom: '3-4' },
+            { id: 'g7', name: '提升運動表現', mappedSymptom: '4-2' },
+            { id: 'g8', name: '私密機能與保養', mappedSymptom: '4-3' }
         ];
 
         // Habits Data & Mapping
@@ -420,15 +439,59 @@
             'a': '長時間盯螢幕', 'b': '長期久坐或缺乏運動', 'c': '熬夜或作息不正常', 'd': '喝太少水',
             'e': '喝太多酒或咖啡', 'f': '飲食不健康', 'g': '空氣或環境品質差', 'h': '高強度工作或運動'
         };
-        const HABIT_MAP = {
-            '1-1': ['c','e'], '1-2': ['a','c'], '1-3': ['a','c','e'], '1-4': ['a','h'], '1-5': ['c','h'], 
-            '2-1': ['d','g'], '2-2': ['c','f'], '2-3': ['g','f'], '2-4': ['c','g'], '2-5': ['c','g'], '2-6': ['c','f'],
-            '3-1': ['e','f'], '3-2': ['d','f','b'], '3-3': ['c','e'], '3-4': ['b','c'], '3-5': ['b','d'],
-            '4-1': ['h'], '4-2': ['b','c'], '4-3': ['c','d'], '4-4': ['b']
+        const HABITS = [
+            // '1-1': ['c','e'], '1-2': ['a','c'], '1-3': ['a','c','e'], '1-4': ['a','h'], '1-5': ['c','h'], 
+            // '2-1': ['d','g'], '2-2': ['c','f'], '2-3': ['g','f'], '2-4': ['c','g'], '2-5': ['c','g'], '2-6': ['c','f'],
+            // '3-1': ['e','f'], '3-2': ['d','f','b'], '3-3': ['c','e'], '3-4': ['b','c'], '3-5': ['b','d'],
+            // '4-1': ['h'], '4-2': ['b','c'], '4-3': ['c','d'], '4-4': ['b']
+            
+            { id: 'a', name: '長時間盯螢幕' },
+            { id: 'b', name: '長期久坐或缺乏運動' },
+            { id: 'c', name: '熬夜或作息不正常' },
+            { id: 'd', name: '喝太少水' },
+            { id: 'e', name: '喝太多酒或咖啡' },
+            { id: 'f', name: '飲食不健康' },
+            { id: 'g', name: '空氣或環境品質差' },
+            { id: 'h', name: '高強度工作或運動' }
+
+        ];
+
+        const SYMPTOM_HABIT_MAP = {
+            '1-1': ['c', 'e'],
+            '1-2': ['a', 'c'],
+            '1-3': ['a', 'c', 'e'],
+            '1-4': ['a', 'h'],
+            '1-5': ['c', 'h'],
+
+            '2-1': ['d', 'g'],
+            '2-2': ['c', 'f'],
+            '2-3': ['g', 'f'],
+            '2-4': ['c', 'g'],
+            '2-5': ['c', 'g'],
+            '2-6': ['c', 'f'],
+
+            '3-1': ['e', 'f'],
+            '3-2': ['d', 'f', 'b'],
+            '3-3': ['c', 'e'],
+            '3-4': ['b', 'c'],
+            '3-5': ['b', 'd'],
+
+            '4-1': ['h'],
+            '4-2': ['b', 'c'],
+            '4-3': ['c', 'd'],
+            '4-4': ['b']
         };
 
         // Extracted Product Database (Based on provided Catalog, strictly de-branded descriptions)
         const PRODUCT_DB = [
+            {
+                name: '綜合維生素粉末', brand: 'Isotonix', price: 'NT$1,970',
+                nutrient: '多種必需維生素與礦物質', 
+                nutrientDesc: '全身機能與營養打底',
+                desc: '完美填補現代人日常飲食的營養缺口。配方涵蓋了維生素 B群、C、D、E等多種必需維生素與礦物質，適合為全身健康機能建立穩固的基礎。',
+                tags: ['基礎營養', '能量體力'], 
+                triggers: ['1-3-a', '1-3-c', '1-3-d', '1-3-e', '1-3-f', '1-3-h']
+            },
             {
                 name: '葡萄籽、松樹皮、紅酒萃取精華粉末 (OPC-3)', brand: 'Isotonix', price: 'NT$2,810',
                 nutrient: '葡萄籽、紅酒萃取物與生物類黃酮', 
@@ -494,6 +557,23 @@
 
         // --- STREAMING_CHUNK:Stage 1 Slider Visualization ---
         const sliders = ['head', 'skin', 'gut', 'lower'];
+
+        function getHabitById(id) {
+            return HABITS.find(habit => habit.id === id);
+        }
+
+        function getSymptomById(id) {
+            return SYMPTOMS.find(symptom => symptom.id === id);
+        }
+
+        // 暫定相容曾
+        const HABIT_MAP = Object.fromEntries(
+            HABITS.map(habit => [
+                habit.id,
+                habit.name
+            ])
+        );
+        const SYMPTOMS_DB = SYMPTOMS;
         
         function updateVisuals() {
             let totalScore = 0;
@@ -520,7 +600,7 @@
             document.documentElement.style.setProperty('--wave-dark', darkColor);
 
             const maxWaterY = 420; 
-            const minWaterY = 50;  
+            const minWaterY = -10;  
             const waterY = maxWaterY - (normalizedRatio * (maxWaterY - minWaterY));
             
             document.getElementById('water-level').style.transform = `translateY(${waterY}px)`;
@@ -540,17 +620,26 @@
             document.querySelectorAll('.stage-container').forEach(el => el.classList.remove('active'));
             state.stage = newStage;
             
+            // Allow showing any target stage securely.
+            document.getElementById(`stage-${newStage}`).classList.add('active');
+            
             if (newStage === 4) {
-                document.getElementById(`stage-${newStage}`).classList.add('active');
                 renderStage4();
-            } else {
-                document.getElementById(`stage-${newStage}`).classList.add('active');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Stage 1 -> Stage 2
+        // Stage 1 -> Stage 2 (or 5 for Emergency)
         document.getElementById('btn-next-stage1').addEventListener('click', () => {
+            const totalScore = state.scores.head + state.scores.skin + state.scores.gut + state.scores.lower;
+
+            // ===== 新增防護機制：若總分過低，直接導向緊急就醫畫面 =====
+            if (totalScore < 2) {
+                switchStage(5);
+                return; // 中止後續判定
+            }
+
+            // 原有邏輯：Track A 或是 Track B
             const minScore = Math.min(state.scores.head, state.scores.skin, state.scores.gut, state.scores.lower);
             if (minScore < 7) {
                 state.track = 'A';
@@ -589,10 +678,10 @@
         function renderTrackASymptoms() {
             const grid = document.getElementById('symptoms-grid');
             let validSymptoms = SYMPTOMS_DB.filter(s => state.scores[s.metric] < 7);
-            validSymptoms.sort((a, b) => b.weight - a.weight);
+            validSymptoms.sort((a, b) => b.priority - a.priority);
             validSymptoms = validSymptoms.slice(0, 10); // Enforce max 10
             
-            grid.innerHTML = validSymptoms.map(s => createCheckboxHTML(s.id, s.text, 'symptoms')).join('');
+            grid.innerHTML = validSymptoms.map(s => createCheckboxHTML(s.id, s.name, 'symptoms')).join('');
             
             document.querySelectorAll('.symptoms-cb').forEach(cb => {
                 cb.addEventListener('change', (e) => {
@@ -604,7 +693,7 @@
 
         function renderTrackBGoals() {
             const grid = document.getElementById('goals-grid');
-            grid.innerHTML = GOALS_DB.map(g => createCheckboxHTML(g.id, g.text, 'goals')).join('');
+            grid.innerHTML = GOALS_DB.map(g => createCheckboxHTML(g.id, g.name, 'goals')).join('');
             
             document.querySelectorAll('.goals-cb').forEach(cb => {
                 cb.addEventListener('change', (e) => {
@@ -630,7 +719,7 @@
             let habitSet = new Set();
             
             state.symptoms.forEach(symId => {
-                const hArr = HABIT_MAP[symId] || [];
+                const hArr = SYMPTOM_HABIT_MAP[symId] || [];
                 hArr.forEach(h => habitSet.add(h));
             });
 
@@ -644,7 +733,18 @@
             }
             if (habitKeys.length > 8) habitKeys = habitKeys.slice(0, 8);
 
-            grid.innerHTML = habitKeys.map(k => createCheckboxHTML(k, HABITS_DICT[k], 'habits')).join('');
+            // grid.innerHTML = habitKeys.map(k => createCheckboxHTML(k, HABITS_DICT[k], 'habits')).join('');
+            grid.innerHTML = habitKeys
+                .map(k => {
+                    const habit = getHabitById(k);
+
+                    return createCheckboxHTML(
+                        habit.id,
+                        habit.name,
+                        'habits'
+                    );
+                })
+                .join('');
             
             document.querySelectorAll('.habits-cb').forEach(cb => {
                 cb.addEventListener('change', (e) => {
@@ -754,9 +854,9 @@
             
             let triggerText = "";
             if (state.track === 'A') {
-                triggerText = state.symptoms.map(id => SYMPTOMS_DB.find(s=>s.id === id)?.text).join(', ');
+                triggerText = state.symptoms.map(id => SYMPTOMS_DB.find(s=>s.id === id)?.name).join(', ');
             } else {
-                triggerText = state.goals.map(id => GOALS_DB.find(g=>g.id === id)?.text).join(', ');
+                triggerText = state.goals.map(id => GOALS_DB.find(g=>g.id === id)?.name).join(', ');
             }
             const habitText = state.habits.map(h => HABITS_DICT[h]).join(', ') || '無特別標註';
 
@@ -819,12 +919,28 @@
             type();
         }
 
-        document.getElementById('btn-restart').addEventListener('click', () => {
+        // 重置應用程式狀態功能 (供正常結果與緊急結果共用)
+        function resetApp() {
+            // 重置滑桿到預設值 2
+            sliders.forEach(id => {
+                const el = document.getElementById(id);
+                el.value = 2;
+            });
+            updateVisuals();
+
+            // 清空所有陣列與選項狀態
             state.symptoms = [];
             state.goals = [];
             state.habits = [];
             document.querySelectorAll('.custom-checkbox').forEach(cb => cb.checked = false);
+            
+            // 返回第一頁
             switchStage(1);
+        }
+
+        // 綁定所有 "再測一次" 按鈕
+        document.querySelectorAll('.btn-restart').forEach(btn => {
+            btn.addEventListener('click', resetApp);
         });
 
         document.getElementById('btn-share').addEventListener('click', () => {
