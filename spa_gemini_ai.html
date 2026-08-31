@@ -424,21 +424,30 @@
 
         // Goals Data (Track B)
         const GOALS_DB = [
-            { id: 'g1', name: '高品質睡眠', mappedSymptom: '1-1' },
-            { id: 'g2', name: '提升精神與專注力', mappedSymptom: '1-3' },
-            { id: 'g3', name: '透亮白皙好氣色', mappedSymptom: '2-4' },
-            { id: 'g4', name: '抗老與肌膚緊緻', mappedSymptom: '2-5' },
-            { id: 'g5', name: '每日順暢排空', mappedSymptom: '3-2' },
-            { id: 'g6', name: '消化代謝與吸收', mappedSymptom: '3-4' },
-            { id: 'g7', name: '提升運動表現', mappedSymptom: '4-2' },
-            { id: 'g8', name: '私密機能與保養', mappedSymptom: '4-3' }
+            // { id: 'g1', name: '高品質睡眠', mappedSymptom: '1-1' },
+            // { id: 'g2', name: '提升精神與專注力', mappedSymptom: '1-3' },
+            // { id: 'g3', name: '透亮白皙好氣色', mappedSymptom: '2-4' },
+            // { id: 'g4', name: '抗老與肌膚緊緻', mappedSymptom: '2-5' },
+            // { id: 'g5', name: '每日順暢排空', mappedSymptom: '3-2' },
+            // { id: 'g6', name: '消化代謝與吸收', mappedSymptom: '3-4' },
+            // { id: 'g7', name: '提升運動表現', mappedSymptom: '4-2' },
+            // { id: 'g8', name: '私密機能與保養', mappedSymptom: '4-3' }
+
+            { id: 'g1', name: '高品質睡眠', mappedMatrix: 'c-1-1' },
+            { id: 'g2', name: '提升精神與專注力', mappedMatrix: 'a-1-3' },
+            { id: 'g3', name: '透亮白皙好氣色', mappedMatrix: 'c-2-4' },
+            { id: 'g4', name: '抗老與肌膚緊緻', mappedMatrix: 'c-2-5' },
+            { id: 'g5', name: '每日順暢排空', mappedMatrix: 'b-3-2'},
+            { id: 'g6', name: '消化代謝與吸收', mappedMatrix: 'b-3-4'},
+            { id: 'g7', name: '提升運動表現', mappedMatrix: 'b-4-2'},
+            { id: 'g8', name: '私密機能與保養', mappedMatrix: 'c-4-3'}
         ];
 
         // Habits Data & Mapping
-        const HABITS_DICT = {
-            'a': '長時間盯螢幕', 'b': '長期久坐或缺乏運動', 'c': '熬夜或作息不正常', 'd': '喝太少水',
-            'e': '喝太多酒或咖啡', 'f': '飲食不健康', 'g': '空氣或環境品質差', 'h': '高強度工作或運動'
-        };
+        // const HABITS_DICT = {
+        //     'a': '長時間盯螢幕', 'b': '長期久坐或缺乏運動', 'c': '熬夜或作息不正常', 'd': '喝太少水',
+        //     'e': '喝太多酒或咖啡', 'f': '飲食不健康', 'g': '空氣或環境品質差', 'h': '高強度工作或運動'
+        // };
         const HABITS = [
             // '1-1': ['c','e'], '1-2': ['a','c'], '1-3': ['a','c','e'], '1-4': ['a','h'], '1-5': ['c','h'], 
             // '2-1': ['d','g'], '2-2': ['c','f'], '2-3': ['g','f'], '2-4': ['c','g'], '2-5': ['c','g'], '2-6': ['c','f'],
@@ -482,9 +491,91 @@
             '4-4': ['b']
         };
 
+        const NUTRIENT_MATRIX = {
+            'a-1-1': {
+                nutrients: [
+                    'GABA (麩胺酸發酵物)',
+                    '鎂 (Magnesium)',
+                    '南非醉茄根葉萃取物 (Sensoril®)',
+                    '左旋色胺酸 (L-Tryptophan)'
+                ],
+                products: [
+                    'ZZZ\'S 晚安好眠雙層錠狀食品',
+                    '愛尚它益善™舒寧配方粉末食品',
+                    'Prime™ 鎂力錠',
+                    '全新生活™舒衡配方錠狀食品',
+                    'Tower+ 舒緩修護鎂噴霧'
+                ]
+            },
+
+            'a-1-2': {
+                nutrients: [
+                    '葉黃素 / 玉米黃素 (含小米草、茄紅素)',
+                    'Omega-3 魚油 (含 EPA 與 DHA)',
+                    '蝦紅素',
+                    '山桑子萃取物 (Bilberry)'
+                ],
+                products: [
+                    '愛尚它®適明配方粉末',
+                    '愛尚它®紅藻萃取精華粉末 (含蝦紅素)',
+                    'Prime™ 紅藻精華軟膠囊食品 (含蝦紅素)',
+                    '易善™魚油含維生素E軟膠囊食品',
+                    'VivoQuin™ 魚油加黑種草籽油複方膠囊食品'
+                ]
+            },
+
+            'a-1-3': {
+                nutrients: [
+                    '菸鹼醯胺 / 維生素 B3',
+                    '維生素 B 群',
+                    'Omega-3 魚油 (含 EPA 與 DHA)'
+                ],
+                products: [
+                    'Prime™ 菸鹼醯胺 D-核糖複方凍',
+                    '愛尚它®複方維生素B粉末',
+                    '愛尚它®綜合維生素粉末',
+                    '易善™魚油含維生素E軟膠囊',
+                    'VivoQuin™ 魚油加黑種草籽油複方膠囊食品',
+                    'THYMENOL™ 黑種草籽油松樹皮萃取物複方膠囊食品'
+                ]
+            },
+
+            'a-1-4': {
+                nutrients: [
+                    '前花青素（OPC-3）/松樹皮萃取物 (Pycnogenol®)',
+                    '鎂 (Magnesium)',
+                    '鈣 (Calcium)'
+                ],
+                products: [
+                    '愛尚它®葡萄籽、松樹皮、紅酒萃取精華粉末 (OPC-3)',
+                    'OPC-3® 雙層 Q 心嚼粒',
+                    '愛尚它®等滲鈣粉末',
+                    'Prime™ 鎂力錠',
+                    'Tower+ 舒緩修護鎂噴霧',
+                    'THYMENOL™ 黑種草籽油松樹皮萃取物複方膠囊食品'
+                ]
+            },
+
+            'a-1-5': {
+                nutrients: [
+                    '南非醉茄根葉萃取物 (Sensoril®)',
+                    'GABA (麩胺酸發酵物)',
+                    '左旋色胺酸 (L-Tryptophan)',
+                    '鎂 (Magnesium)'
+                ],
+                products: [
+                    '全新生活™舒衡配方錠狀食品',
+                    'ZZZ\'S 晚安好眠雙層錠狀食品',
+                    '愛尚它益善™舒寧配方粉末食品',
+                    'Prime™ 鎂力錠'
+                ]
+            }
+        };
+
         // Extracted Product Database (Based on provided Catalog, strictly de-branded descriptions)
         const PRODUCT_DB = [
             {
+                id: 'p001',
                 name: '綜合維生素粉末', brand: 'Isotonix', price: 'NT$1,970',
                 nutrient: '多種必需維生素與礦物質', 
                 nutrientDesc: '全身機能與營養打底',
@@ -564,6 +655,10 @@
 
         function getSymptomById(id) {
             return SYMPTOMS.find(symptom => symptom.id === id);
+        }
+
+        function getProductById(id) {
+            return PRODUCT_DB.find(product => product.id === id);
         }
 
         // 暫定相容曾
@@ -677,7 +772,19 @@
 
         function renderTrackASymptoms() {
             const grid = document.getElementById('symptoms-grid');
-            let validSymptoms = SYMPTOMS_DB.filter(s => state.scores[s.metric] < 7);
+            // let validSymptoms = SYMPTOMS_DB.filter(s => state.scores[s.metric] < 7);
+
+            let validSymptoms = SYMPTOMS_DB.filter(symptom => {
+                const categoryScore = {
+                    '1': state.scores.head,
+                    '2': state.scores.skin,
+                    '3': state.scores.gut,
+                    '4': state.scores.lower
+                }[symptom.category];
+
+                return categoryScore < 7;
+            });
+            
             validSymptoms.sort((a, b) => b.priority - a.priority);
             validSymptoms = validSymptoms.slice(0, 10); // Enforce max 10
             
@@ -766,52 +873,235 @@
         });
 
         // --- STREAMING_CHUNK:Stage 4 Analysis & Product Generation ---
-        function renderStage4() {
-            renderRadarChart();
-            
-            let activeTriggers = [];
+        
+        function buildCombinedParameters() {
+            const parameters = [];
+
+            state.symptoms.forEach(symptomId => {
+                state.habits.forEach(habitId => {
+                    parameters.push(`${habitId}-${symptomId}`);
+                });
+            });
+
+            return parameters;
+        }
+
+        function analyzeNutrientMatrix(parameters) {
+            const nutrientScores = {};
+            const productScores = {};
+
+            parameters.forEach(parameter => {
+                const data = NUTRIENT_MATRIX[parameter];
+
+                if (!data) return;
+
+                // 營養素累積
+                data.nutrients.forEach(nutrient => {
+                    if (!nutrientScores[nutrient]) {
+                        nutrientScores[nutrient] = 0;
+                    }
+
+                    nutrientScores[nutrient]++;
+                });
+
+                // 產品累積
+                data.products.forEach(product => {
+                    if (!productScores[product]) {
+                        productScores[product] = 0;
+                    }
+
+                    productScores[product]++;
+                });
+            });
+
+            return {
+                nutrients: nutrientScores,
+                products: productScores
+            };
+        }
+
+        function getActiveMatrixKeys() {
+            // Track A
             if (state.track === 'A') {
-                activeTriggers = state.symptoms;
-            } else {
-                activeTriggers = state.goals.map(gid => GOALS_DB.find(g => g.id === gid)?.mappedSymptom).filter(Boolean);
+                return buildCombinedParameters();
             }
 
-            let recProducts = PRODUCT_DB.filter(p => p.triggers.some(t => activeTriggers.includes(t)));
-            if (recProducts.length === 0) recProducts = PRODUCT_DB.slice(0, 3);
-            recProducts = [...new Set(recProducts)].slice(0, 4);
+            // Track B
+            if (state.track === 'B') {
+                return state.goals
+                    .map(goalId => {
+                        const goal = GOALS_DB.find(g => g.id === goalId);
+                        return goal?.mappedMatrix;
+                    })
+                    .filter(Boolean);
+            }
 
-            // Render Nutrient Summary List (De-branded, concise text)
+            return [];
+        }
+        
+        function renderStage4() {
+            renderRadarChart();
+
+            let activeTriggers = [];
+
+            if (state.track === 'A') {
+                // activeTriggers = state.symptoms;
+                activeTriggers = [
+                    ...state.symptoms,
+                    ...buildCombinedParameters()
+                ];
+            } else {
+                // activeTriggers = state.goals.map(gid => GOALS_DB.find(g => g.id === gid)?.mappedSymptom).filter(Boolean);
+                activeTriggers = state.goals.map(gid => GOALS_DB.find(g => g.id === gid)?.mappedMatrix).filter(Boolean);
+            }
+
+            // let recProducts = PRODUCT_DB.filter(p => p.triggers.some(t => activeTriggers.includes(t)));
+            // if (recProducts.length === 0) recProducts = PRODUCT_DB.slice(0, 3);
+            // recProducts = [...new Set(recProducts)].slice(0, 4);
+
+            // // Render Nutrient Summary List (De-branded, concise text)
+            // const nList = document.getElementById('nutrients-list');
+            // nList.innerHTML = recProducts.map(p => `
+            //     <div class="bg-white/70 p-4 rounded-2xl border border-slate-200">
+            //         <span class="text-[15px] font-bold text-slate-800 block mb-1">◆ ${p.nutrient}</span>
+            //         <p class="text-[14px] text-slate-600 leading-relaxed">${p.nutrientDesc}</p>
+            //     </div>
+            // `).join('');
+
+            // // Render Product Cards (Placeholder 3D Box Icon instead of text box)
+            // const pList = document.getElementById('products-list');
+            // pList.innerHTML = recProducts.map(p => `
+            //     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex gap-5 items-center hover:border-slate-300 transition-colors">
+            //         <div class="w-16 h-16 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center overflow-hidden shadow-inner relative">
+            //             ${p.image ? 
+            //                 `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">` : 
+            //                 `<div class="w-full h-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white">
+            //                     <svg class="w-8 h-8 opacity-90" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4h10v3H7zM8 8h8v12a2 2 0 01-2 2H10a2 2 0 01-2-2V8z"/></svg>
+            //                  </div>`
+            //             }
+            //         </div>
+            //         <div class="flex-grow">
+            //             <span class="text-[11px] font-bold bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-md uppercase tracking-wider">${p.brand}</span>
+            //             <h4 class="font-extrabold text-slate-800 text-[15px] mt-1.5">${p.name}</h4>
+            //             <p class="text-[13px] text-slate-500 mt-1 leading-relaxed line-clamp-2">${p.desc}</p>
+            //             <div class="mt-2.5 text-[15px] font-black text-slate-800">${p.price}</div>
+            //         </div>
+            //     </div>
+            // `).join('');
+
+            // window.currentRecProducts = recProducts;
+            // fetchGeminiAnalysis(activeTriggers);
+
+            // 1. 取得目前使用者對應的 Matrix Key
+            const activeParameters = getActiveMatrixKeys();
+            console.log('Active Matrix Parameters:', activeParameters);
+
+            // 2. 分析 Matrix
+            const matrixResult = analyzeNutrientMatrix(activeParameters);
+            console.log('Matrix Result:', matrixResult);
+
+            // 3. 依照分數排序營養素
+            const rankedNutrients = Object.entries(matrixResult.nutrients)
+                .sort((a, b) => b[1] - a[1])
+                .map(([name, score]) => ({
+                    name,
+                    score
+                }));
+
+            // 4. 依照分數排序產品
+            const rankedProducts = Object.entries(matrixResult.products)
+                .sort((a, b) => b[1] - a[1])
+                .map(([productId, score]) => {
+                    const product = getProductById(productId);
+
+                    return {
+                        id: productId,
+                        score,
+                        product
+                    };
+                })
+                .filter(item => item.product);
+
+            // 5. Nutrient Summary
             const nList = document.getElementById('nutrients-list');
-            nList.innerHTML = recProducts.map(p => `
-                <div class="bg-white/70 p-4 rounded-2xl border border-slate-200">
-                    <span class="text-[15px] font-bold text-slate-800 block mb-1">◆ ${p.nutrient}</span>
-                    <p class="text-[14px] text-slate-600 leading-relaxed">${p.nutrientDesc}</p>
-                </div>
-            `).join('');
+            nList.innerHTML = rankedNutrients
+                    .slice(0, 6)
+                    .map(item => `
+                        <div class="bg-white/70 p-4 rounded-2xl border border-slate-200">
+                            <span class="text-[15px] font-bold text-slate-800 block mb-1">
+                                ◆ ${item.name}
+                            </span>
+                            <p class="text-[13px] text-slate-500">
+                                推薦關聯度 ${item.score}
+                            </p>
+                        </div>
+                    `)
+                    .join('');
 
-            // Render Product Cards (Placeholder 3D Box Icon instead of text box)
+            // 6. Product List
             const pList = document.getElementById('products-list');
-            pList.innerHTML = recProducts.map(p => `
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex gap-5 items-center hover:border-slate-300 transition-colors">
-                    <div class="w-16 h-16 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center overflow-hidden shadow-inner relative">
-                        ${p.image ? 
-                            `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">` : 
-                            `<div class="w-full h-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white">
-                                <svg class="w-8 h-8 opacity-90" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4h10v3H7zM8 8h8v12a2 2 0 01-2 2H10a2 2 0 01-2-2V8z"/></svg>
-                             </div>`
-                        }
-                    </div>
-                    <div class="flex-grow">
-                        <span class="text-[11px] font-bold bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-md uppercase tracking-wider">${p.brand}</span>
-                        <h4 class="font-extrabold text-slate-800 text-[15px] mt-1.5">${p.name}</h4>
-                        <p class="text-[13px] text-slate-500 mt-1 leading-relaxed line-clamp-2">${p.desc}</p>
-                        <div class="mt-2.5 text-[15px] font-black text-slate-800">${p.price}</div>
-                    </div>
-                </div>
-            `).join('');
 
-            window.currentRecProducts = recProducts;
-            fetchGeminiAnalysis(activeTriggers);
+            pList.innerHTML = rankedProducts
+                .slice(0, 6)
+                .map(item => {
+                    const p = item.product;
+
+                    return `
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex gap-5 items-center hover:border-slate-300 transition-colors">
+
+                            <div class="w-16 h-16 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center overflow-hidden shadow-inner relative">
+                                ${
+                                    p.image
+                                    ? `
+                                        <img
+                                            src="${p.image}"
+                                            alt="${p.name}"
+                                            class="w-full h-full object-cover"
+                                        >
+                                    `
+                                    : `
+                                        <div class="w-full h-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white">
+                                            <svg class="w-8 h-8 opacity-90" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M7 4h10v3H7zM8 8h8v12a2 2 0 01-2 2H10a2 2 0 01-2-2V8z"/>
+                                            </svg>
+                                        </div>
+                                    `
+                                }
+                            </div>
+
+                            <div class="flex-grow">
+
+                                <span class="text-[11px] font-bold bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                                    ${p.brand}
+                                </span>
+
+                                <h4 class="font-extrabold text-slate-800 text-[15px] mt-1.5">
+                                    ${p.name}
+                                </h4>
+
+                                <p class="text-[13px] text-slate-500 mt-1 leading-relaxed">
+                                    ${p.desc}
+                                </p>
+
+                                <div class="mt-2.5 flex items-center gap-3">
+                                    <span class="text-[15px] font-black text-slate-800">
+                                        ${p.price}
+                                    </span>
+
+                                    <span class="text-[12px] text-slate-400">
+                                        Matrix 關聯度：${item.score}
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    `;
+                })
+                .join('');
+
+            window.currentRecProducts = rankedProducts;
+            fetchGeminiAnalysis(activeParameters);
         }
 
         function renderRadarChart() {
@@ -858,7 +1148,11 @@
             } else {
                 triggerText = state.goals.map(id => GOALS_DB.find(g=>g.id === id)?.name).join(', ');
             }
-            const habitText = state.habits.map(h => HABITS_DICT[h]).join(', ') || '無特別標註';
+            // const habitText = state.habits.map(h => HABITS_DICT[h]).join(', ') || '無特別標註';
+            const habitText = state.habits
+                .map(id => getHabitById(id)?.name)
+                .filter(Boolean)
+                .join(', ') || '無特別標註';
 
             const prompt = `
             請扮演一位專業且溫暖的精準營養與健康管理顧問。
@@ -946,8 +1240,18 @@
         document.getElementById('btn-share').addEventListener('click', () => {
             if (!window.currentRecProducts) return;
             
-            const nutrientList = window.currentRecProducts.map(p => p.nutrient).join('\n• ');
-            const productList = window.currentRecProducts.map(p => p.name).join('\n• ');
+            // const nutrientList = window.currentRecProducts.map(p => p.nutrient).join('\n• ');
+            // const productList = window.currentRecProducts.map(p => p.name).join('\n• ');
+
+            const nutrientList = window.currentRecProducts
+                .map(item => item.product?.nutrient)
+                .filter(Boolean)
+                .join('\n• ');
+
+            const productList = window.currentRecProducts
+                .map(item => item.product?.name)
+                .filter(Boolean)
+                .join('\n• ');
             
             const shareText = `【專屬精準營養推薦清單】\n\n📌 建議補充核心營養素：\n• ${nutrientList}\n\n🛒 專屬推薦組合：\n• ${productList}\n\n(此報告由互動式健康問卷系統自動生成)`;
 
