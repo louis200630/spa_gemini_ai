@@ -1487,7 +1487,7 @@
                 name: '柔雅™滋潤洗髮乳',
                 brand: '柔雅™ Royal Spa',
                 price: 'NT$715',
-                desc: '473ml。專為染燙受損髮質設計。比起甘菊洗髮精，它的洗淨力更為溫和，主要功能在於鎖住髮色並補充流失的水分，防止髮絲因乾燥而斷裂。'
+                desc: '473ml。專為染燙受損髮質設計。比起甘菊洗髮精，它的洗淨力更為溫和，主要功能在於鎖住髮色並補充流失水分，防止髮絲因乾燥而斷裂。'
             },
             'p117': {
                 name: '柔雅™蛋白質護髮乳',
@@ -1602,7 +1602,7 @@
                 brand: '維添秀® Vitashield®',
                 price: 'NT$1,740',
                 desc: '差異：活采眼霜針對極乾的深層皺紋；若美芙眼霜偏向多效緊實；這款則利用維他命 C 與 E 的強大還原力，特別針對因為熬夜、血液循環不良所導致的「眼周黯沉」與「疲憊感」進行提亮與修護。'
-            },
+            }
         };
         const NUTRIENT_DB = {
             '維生素 B 群': {
@@ -1985,8 +1985,7 @@
 
         function renderTrackASymptoms() {
             const grid = document.getElementById('symptoms-grid');
-            // let validSymptoms = SYMPTOMS_DB.filter(s => state.scores[s.metric] < 7);
-
+            
             let validSymptoms = SYMPTOMS_DB.filter(symptom => {
                 const categoryScore = {
                     '1': state.scores.head,
@@ -2053,11 +2052,9 @@
             }
             if (habitKeys.length > 8) habitKeys = habitKeys.slice(0, 8);
 
-            // grid.innerHTML = habitKeys.map(k => createCheckboxHTML(k, HABITS_DICT[k], 'habits')).join('');
             grid.innerHTML = habitKeys
                 .map(k => {
                     const habit = getHabitById(k);
-
                     return createCheckboxHTML(
                         habit.id,
                         habit.name,
@@ -2092,54 +2089,60 @@
             // 1. 準備計分板與營養素收集器
             let productScores = {};
             let nutrientSet = new Set();
-            
             let activeSymptoms = [];
-            let activeHabits = [];
 
-            // 2. 判斷來源 (Track A 或 Track B)
+            // 2. 判斷來源 (Track A 或 Track B) 並進行核心矩陣運算
             if (state.track === 'A') {
                 activeSymptoms = state.symptoms;
-                activeHabits = state.habits;
+                const activeHabits = state.habits;
+                
+                activeHabits.forEach(habit => {
+                    activeSymptoms.forEach(sym => {
+                        let matrixKey = `${habit}-${sym}`; 
+                        
+                        if (MATRIX_DB[matrixKey]) {
+                            MATRIX_DB[matrixKey].nutrients.forEach(n => nutrientSet.add(n));
+                            MATRIX_DB[matrixKey].products.forEach(pid => {
+                                productScores[pid] = (productScores[pid] || 0) + 1;
+                            });
+                        }
+                    });
+                });
             } else {
-                // Track B: 用戶未選習慣，我們將目標轉回對應的症狀代碼，並賦予全域習慣權重來進行正向推薦
-                activeSymptoms = state.goals.map(gid => GOALS_DB.find(g => g.id === gid)?.mappedSymptom).filter(Boolean);
-                activeHabits = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; 
-            }
-
-            // 3. 查表與計分演算法 (核心矩陣運算)
-            activeHabits.forEach(habit => {
-                activeSymptoms.forEach(sym => {
-                    let matrixKey = `${habit}-${sym}`; // 組合字串，例如 'a-1-1'
-                    
-                    if (MATRIX_DB[matrixKey]) {
-                        // 收集該情境對應的營養素
-                        MATRIX_DB[matrixKey].nutrients.forEach(n => nutrientSet.add(n));
-                        // 產品計分 (在矩陣中出現一次 +1 分)
-                        MATRIX_DB[matrixKey].products.forEach(pid => {
-                            productScores[pid] = (productScores[pid] || 0) + 1;
-                        });
+                // Track B: 用戶直接選擇健康目標，對應至特定的 Matrix Key (不需要 habits)
+                activeSymptoms = state.goals; // 提供給 AI 作為判斷文本
+                
+                state.goals.forEach(gid => {
+                    let goal = GOALS_DB.find(g => g.id === gid);
+                    if (goal && goal.mappedMatrix) {
+                        let matrixKey = goal.mappedMatrix;
+                        if (MATRIX_DB[matrixKey]) {
+                            MATRIX_DB[matrixKey].nutrients.forEach(n => nutrientSet.add(n));
+                            MATRIX_DB[matrixKey].products.forEach(pid => {
+                                productScores[pid] = (productScores[pid] || 0) + 1;
+                            });
+                        }
                     }
                 });
-            });
+            }
 
-            // 4. 產品降冪排序並取出最高分的前 4 名
+            // 3. 產品降冪排序 (移除上限限制，顯示所有被觸發的產品)
             let sortedProductIds = Object.keys(productScores)
                 .sort((a, b) => productScores[b] - productScores[a]);
             // 若客戶未觸發任何產品，給予基礎百搭預設值
             if (sortedProductIds.length === 0) {
                 sortedProductIds = ['p001', 'p002', 'p003', 'p004']; // 預設 OPC-3, 綜合維生素, 鈣, 酵素
             }
+            
             // 將 ID 轉換回詳細的產品資料物件
             let recProducts = sortedProductIds.map(pid => ({ id: pid, ...PRODUCT_DB[pid] })).filter(p => p.name);
 
-            // 取出最高權重的前 4 項營養素
+            // 4. 取出所有觸發的營養素 (移除上限限制，顯示全部)
             let recNutrients = Array.from(nutrientSet);
 
-
-            // 5. 渲染：核心營養素 (從 NUTRIENT_DB 抓取白話文說明)
+            // 5. 渲染：核心營養素
             const nList = document.getElementById('nutrients-list');
             nList.innerHTML = recNutrients.map(nName => {
-                // 若字典中沒有建檔，給予通用說明
                 let desc = NUTRIENT_DB[nName] ? NUTRIENT_DB[nName].desc : '為您提供關鍵的健康支援與基礎防禦力。';
                 return `
                     <div class="bg-white/70 p-4 rounded-2xl border border-slate-200">
@@ -2149,7 +2152,7 @@
                 `;
             }).join('');
 
-            // 6. 渲染：專屬 Market Taiwan 推薦清單
+            // 6. 渲染：產品清單
             const pList = document.getElementById('products-list');
             pList.innerHTML = recProducts.map(p => `
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex gap-5 items-center hover:border-slate-300 transition-colors">
@@ -2221,7 +2224,7 @@
             } else {
                 triggerText = state.goals.map(id => GOALS_DB.find(g=>g.id === id)?.name).join(', ');
             }
-            // const habitText = state.habits.map(h => HABITS_DICT[h]).join(', ') || '無特別標註';
+            
             const habitText = state.habits
                 .map(id => getHabitById(id)?.name)
                 .filter(Boolean)
@@ -2265,7 +2268,7 @@
                 }
             } catch (err) {
                 console.error("Gemini API Error:", err);
-                container.innerHTML = `<p>親愛的貴賓您好，根據您的掃描結果，我們已為您準備好專屬的精準營養補給方向。請參考下方的營養素建議，透過科學化的等滲透技術與植萃精華，讓我們一起邁向更平衡健康的日常！</p>`;
+                container.innerHTML = `<p>親愛的貴賓您好，根據您的掃描結果，我們已為您準備好專屬的精準營養補給方向。請參考下方的營養素建議，透過科學化的配方與植萃精華，讓我們一起邁向更平衡健康的日常！</p>`;
             }
         }
 
