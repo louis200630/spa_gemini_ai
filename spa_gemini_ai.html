@@ -2124,8 +2124,7 @@
 
             // 4. 產品降冪排序並取出最高分的前 4 名
             let sortedProductIds = Object.keys(productScores)
-                .sort((a, b) => productScores[b] - productScores[a])
-                .slice(0, 4);
+                .sort((a, b) => productScores[b] - productScores[a]);
             // 若客戶未觸發任何產品，給予基礎百搭預設值
             if (sortedProductIds.length === 0) {
                 sortedProductIds = ['p001', 'p002', 'p003', 'p004']; // 預設 OPC-3, 綜合維生素, 鈣, 酵素
@@ -2134,7 +2133,7 @@
             let recProducts = sortedProductIds.map(pid => ({ id: pid, ...PRODUCT_DB[pid] })).filter(p => p.name);
 
             // 取出最高權重的前 4 項營養素
-            let recNutrients = Array.from(nutrientSet).slice(0, 4);
+            let recNutrients = Array.from(nutrientSet);
 
 
             // 5. 渲染：核心營養素 (從 NUTRIENT_DB 抓取白話文說明)
