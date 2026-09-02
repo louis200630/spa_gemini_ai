@@ -343,7 +343,7 @@
                     <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
                         <span>🔑</span> 推薦補充之核心營養素
                     </h3>
-                    <div id="nutrients-list" class="flex flex-col gap-3">
+                    <div id="nutrients-list" class="flex flex-col gap-3 overflow-y-auto custom-scrollbar" style=" max-height: 600px;">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -354,7 +354,7 @@
                 <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg shrink-0">
                     <span>🛒</span> 專屬 Market Taiwan 推薦清單
                 </h3>
-                <div id="products-list" class="flex flex-col gap-4 overflow-y-auto flex-1 min-h-[400px] lg:min-h-0 pr-2 custom-scrollbar">
+                <div id="products-list" class="flex flex-col gap-4 overflow-y-auto flex-1 min-h-[400px] lg:min-h-0 pr-2 custom-scrollbar" style="max-height: 800px;">
                     <!-- Populated by JS -->
                 </div>
             </div>
@@ -381,7 +381,7 @@
                 </svg>
             </div>
             
-            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-wider mb-2">請儘速就醫</h2>
+            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-wider mb-2">請直接去看醫生</h2>
             <p class="text-slate-500 text-lg font-medium mb-4">系統偵測到您的身體狀態可能需要專業醫療人員的立即協助。</p>
             
             <button class="btn-restart px-8 py-4 mt-4 rounded-xl bg-slate-800 text-white font-bold text-lg shadow-lg hover:bg-slate-700 transition-colors w-full md:w-auto">
@@ -406,7 +406,7 @@
             { id: '3-2', name: '便秘或排便不順', category: '3', priority: 85 },
             { id: '2-3', name: '肌膚泛紅與敏弱', category: '2', priority: 80 },
             { id: '2-2', name: '粉刺痘痘與痘疤', category: '2', priority: 70 },
-            { id: '2-1', name: '皮膚乾燥脫屑', category: '2', priority: 60 },
+            { id: '2-1', name: '皮膚乾燥脫屑', category: '2', priority: 42 },
             { id: '2-5', name: '皺紋鬆弛與老化', category: '2', priority: 55 },
             { id: '2-4', name: '斑點與色素沈澱', category: '2', priority: 50 },
             { id: '1-4', name: '頭暈或緊繃', category: '1', priority: 45 },
@@ -447,29 +447,29 @@
         ];
 
         const SYMPTOM_HABIT_MAP = {
-            '1-1': ['c', 'e'],
-            '1-2': ['a', 'c'],
-            '1-3': ['a', 'c', 'e'],
-            '1-4': ['a', 'h'],
-            '1-5': ['c', 'h'],
+            '1-1': ['a', 'c', 'e', 'h'],
+            '1-2': ['a'],
+            '1-3': ['a', 'b', 'c', 'd', 'e', 'f', 'h'],
+            '1-4': ['a', 'b', 'd', 'e'],
+            '1-5': ['a', 'c', 'e', 'g', 'h'],
 
-            '2-1': ['d', 'g'],
-            '2-2': ['c', 'f'],
-            '2-3': ['g', 'f'],
-            '2-4': ['c', 'g'],
-            '2-5': ['c', 'g'],
-            '2-6': ['c', 'f'],
+            '2-1': ['a', 'd', 'e', 'g'],
+            '2-2': ['c', 'f', 'g'],
+            '2-3': ['a', 'e', 'g'],
+            '2-4': ['a', 'f', 'g'],
+            '2-5': ['a', 'c', 'd', 'f', 'g'],
+            '2-6': ['c'],
 
-            '3-1': ['e', 'f'],
-            '3-2': ['d', 'f', 'b'],
-            '3-3': ['c', 'e'],
-            '3-4': ['b', 'c'],
-            '3-5': ['b', 'd'],
+            '3-1': ['b', 'e', 'f'],
+            '3-2': ['b', 'd', 'e', 'f'],
+            '3-3': ['c', 'e', 'f', 'g'],
+            '3-4': ['b', 'c', 'f'],
+            '3-5': ['a', 'b', 'd'],
 
             '4-1': ['h'],
-            '4-2': ['b', 'c'],
-            '4-3': ['c', 'd'],
-            '4-4': ['b']
+            '4-2': ['e', 'h'],
+            '4-3': ['d', 'f'],
+            '4-4': ['b', 'h']
         };
 
         const MATRIX_DB = {
@@ -575,6 +575,10 @@
             'c-2-6': {
                 nutrients: ['活性胜肽與生物素 (Biotin)', '蕁麻根萃取與茶樹精油', '南瓜籽萃取、蕁麻根萃取與植物固醇', '草本舒緩因子(如洋甘菊、薰衣草萃取)'],
                 products: ['p112', 'p113', 'p107', 'p037', 'p115'] // Fixx沛絲錠, Fixx精華液, Fixx洗髮乳, 男性舒護, 柔雅甘菊
+            },
+            'c-3-3': {
+                nutrients: ['益生菌 (Probiotics)', '綜合消化酵素', '牛初乳 (含 IgG) 與猴頭菇子實體粉末', '南非醉茄根葉萃取物 (Sensoril®)', '蘆薈萃取精華'],
+                products: ['p004', 'p005', 'p043', 'p039', 'p057', 'p040', 'p041', 'p022'] // 消化酵素, 隨身包, 益生十菌, 牛初乳粉 + 舒衡 + 蘆薈
             },
             'c-3-4': {
                 nutrients: ['南非醉茄根葉萃取物 (Sensoril®)', '鉻 (Chromium)', '白腎豆萃取、LeptiCore™ 與 苦瓜萃取', '綠咖啡豆萃取物 (含綠原酸) 與 薑根粉', '綠茶萃取物 (天然咖啡因)'],
@@ -683,6 +687,10 @@
             'f-3-2': {
                 nutrients: ['水溶性膳食纖維 (Fibersol®-2)', '深綠蔬菜精華 (植化素)', '蘆薈萃取精華 (含天然酵素、胺基酸、維生素)'],
                 products: ['p044', 'p022', 'p040', 'p041', 'p052'] // 先進纖維粉, 樂活蔬果, 蘆薈汁, 蘆薈粉末, 即享雪克
+            },
+            'f-3-3': {
+                nutrients: ['益生菌 (Probiotics)', '綜合消化酵素', '牛初乳 (含 IgG) 與猴頭菇子實體粉末'],
+                products: ['p004', 'p005', 'p043', 'p039'] // 消化酵素, 隨身包, 益生十菌, 牛初乳粉
             },
             'f-3-4': {
                 nutrients: ['白腎豆萃取、LeptiCore™ 與 苦瓜萃取', '綠咖啡豆萃取物 (含綠原酸) 與 薑根粉', '專利 Slendacor® (含辣木葉) 與 酪梨', '鉻 (Chromium)'],
@@ -1985,21 +1993,34 @@
 
         function renderTrackASymptoms() {
             const grid = document.getElementById('symptoms-grid');
+            const scores = {
+                '1': state.scores.head,
+                '2': state.scores.skin,
+                '3': state.scores.gut,
+                '4': state.scores.lower
+            };
+            const minScore = Math.min(...Object.values(scores));
+            let primarySymptoms = [];   // 最低分類別的題目
+            let secondarySymptoms = []; // 其他低於 7 分類別的題目
             
-            let validSymptoms = SYMPTOMS_DB.filter(symptom => {
-                const categoryScore = {
-                    '1': state.scores.head,
-                    '2': state.scores.skin,
-                    '3': state.scores.gut,
-                    '4': state.scores.lower
-                }[symptom.category];
-
-                return categoryScore < 7;
+            SYMPTOMS_DB.forEach(symptom => {
+                const categoryScore = scores[symptom.category];
+                
+                // 若該項目屬於最低分區塊，且確實小於 7 分，放入首要陣列
+                if (categoryScore === minScore && categoryScore < 7) {
+                    primarySymptoms.push(symptom);
+                } 
+                // 若該項目非最低分，但仍小於 7 分，放入次要陣列
+                else if (categoryScore < 7) {
+                    secondarySymptoms.push(symptom);
+                }
             });
+
+            primarySymptoms.sort((a, b) => b.priority - a.priority);
+            secondarySymptoms.sort((a, b) => b.priority - a.priority);
             
-            validSymptoms.sort((a, b) => b.priority - a.priority);
-            validSymptoms = validSymptoms.slice(0, 10); // Enforce max 10
-            
+            let validSymptoms = [...primarySymptoms, ...secondarySymptoms].slice(0, 10);
+        
             grid.innerHTML = validSymptoms.map(s => createCheckboxHTML(s.id, s.name, 'symptoms')).join('');
             
             document.querySelectorAll('.symptoms-cb').forEach(cb => {
@@ -2131,7 +2152,7 @@
                 .sort((a, b) => productScores[b] - productScores[a]);
             // 若客戶未觸發任何產品，給予基礎百搭預設值
             if (sortedProductIds.length === 0) {
-                sortedProductIds = ['p001', 'p002', 'p003', 'p004']; // 預設 OPC-3, 綜合維生素, 鈣, 酵素
+                sortedProductIds = ['p009', 'p032', 'p040'];
             }
             
             // 將 ID 轉換回詳細的產品資料物件
