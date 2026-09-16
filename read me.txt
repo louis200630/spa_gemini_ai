@@ -1,0 +1,31 @@
+新增產品：
+
+const PRODUCT_DB = {
+'p135': {
+    name: '新產品名稱',
+    brand: '品牌名稱',
+    price: 'NT$1,500',
+    desc: '產品的人工推薦說明與特色。'
+},
+
+...
+}
+
+const NUTRIENT_DB = {
+'新的營養素': {
+    desc: '這裡填寫營養素／成分的說明。'
+},
+
+...
+}
+
+const MATRIX_DB = {
+'情境-症狀': {
+    nutrients: [
+        ...
+    ],
+    products: [
+        ...
+    ]
+},
+}
