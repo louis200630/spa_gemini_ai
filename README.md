@@ -1,35 +1,39 @@
 # 台灣美安健康問卷網站
 
-網站以既有的 `spa_gemini_ai.html` 為唯一問卷來源，完整保留原有的健康問卷與推薦矩陣。
+正式網址：https://spa-gemini-ai.vercel.app/
 
-## 網站部署
-1. 在 Vercel 匯入 GitHub 儲存庫 `louis200630/spa_gemini_ai`。
-2. Production Branch 選擇 `main`。
-3. Framework Preset 選擇 Other；建置設定已寫在 `vercel.json`：
-   - Build Command: `npm run build`
-   - Output Directory: `public`
-4. 第一次部署成功後，在 Vercel Project 的 Domains 頁面取得固定網域（或自行綁定網域）。
-5. 日後只要提交 `main` 的新版 `spa_gemini_ai.html`，Vercel 就會自動重新部署，固定網址不變。
+## 頁面
+- `/`：原始健康問卷。直接從 `spa_gemini_ai.html` 原樣建置，保留問卷題目、推薦邏輯、營養素及產品矩陣，不再載入「客戶產品清單」外掛。
+- `/recommendation-list/`：獨立的「圖片與推薦清單製作」工具頁。可搜尋現有產品、手動加入品項、修改數量與說明、上傳封面與產品圖片，並匯出 PNG、CSV 或使用瀏覽器列印為 PDF。此工具不讀取問卷答案或自動推薦結果。
 
-## 使用與匯出
-- 問卷自動生成健康建議及產品推薦。
-- 在結果頁從推薦商品按「加入客戶清單」，也可以搜尋其他產品自行加入（不改變問卷計分）。
-- 「樂優選™胜肽益生亮白牙膏」只允許手動搜尋選品，功能標籤為「個人衛生」，不進營養素或推薦矩陣。
-- 可匯出 UTF-8 CSV（Excel 可讀），或使用瀏覽器列印功能另存 PDF。
-- 清單價格是參考售價，應以實際官網結帳為準。
+> 備註：因未取得先前所製作「上傳圖片＋推薦清單」頁面的原始檔，現階段子頁面是依所描述功能重新實作的獨立版本，非先前頁面逐字／逐像素搬移。
 
-## 資料與安全
-- 此版本是純靜態前端，不會將健康問卷答案或客戶產品選取紀錄上傳至自建伺服器或資料庫。
-- 重新整理或關閉分頁後，這次建立的客戶清單不會保留；請先匯出。
-- 本專案原始碼為公開 GitHub Repo，網站上線後也可能被任何知道網址的人開啟；需要限制存取時，請另外設定身分驗證或 Vercel 專案保護。
-- 原始問卷仍引用外部的 Tailwind CSS 與 Chart.js CDN。
+## 部署
+本專案使用 GitHub + Vercel Git integration：
+1. Vercel Project：`spa-gemini-ai`
+2. GitHub Repo：`louis200630/spa_gemini_ai`
+3. Production Branch：`main`
+4. Build Command：`npm run build`
+5. Output Directory：`public`
 
-## 本地測試
-需要 Node.js：
-```sh
+日後提交 `main` 後，Vercel 成功部署新版，固定正式網址保持不變。
+
+## 維護方式
+- 修改健康問卷題目、評分、產品或營養矩陣：直接修改 `spa_gemini_ai.html`。
+- 商品主資料：子頁面的商品清單在建置時從原始 HTML 的 `PRODUCT_DB` 擷取，避免手動同步兩份。
+- 樂優選™胜肽益生亮白牙膏只加在獨立工具頁的手動產品清單中，不進問卷矩陣。
+- 修改子頁面：`recommendation-list.html` 與 `recommendation-list.js`。
+- 建置流程：`build-site.mjs`。
+
+## 隱私提醒
+這是純前端靜態網站。工具頁圖片與商品清單在瀏覽器處理，不上傳到本站的後端，也不會儲存在本站的資料庫；重新整理可能遺失未匯出內容。
+
+**工具子頁面目前沒有獨立登入限制。** 網址未放在公開問卷上，不等於存取控制；任何知道完整網址的人仍可能開啟工具。請勿在沒有保護機制的情況下處理敏感個人健康資料。
+
+## 本地建置
+Node.js（建議 LTS）：
+```bash
 npm run build
 ```
-建置完成後可用靜態伺服器預覽 `public/index.html`。
 
-## 維護原則
-修改問卷邏輯或 `PRODUCT_DB` 時直接修改 `spa_gemini_ai.html`；網站建置會自動載入獨立的 `client-list.js` 匯出模組，不需要手動重新貼上匯出程式碼。
+產出的靜態網站位於 `public/`，包含首頁與獨立工具子頁面。
