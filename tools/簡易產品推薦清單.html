@@ -44,7 +44,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 .footerbar{padding:15px 20px;background:#fbfdfc;border-top:1px solid #e7edeb}
 .actions{display:flex;flex-wrap:wrap;gap:9px}
 .btn{border:1px solid #c6d8d5;border-radius:9px;background:white;color:#206b60;font-weight:700;font-size:14px;padding:11px 16px;min-height:43px}
-.btn.main{background:#137a6e;color:#fff;border-color:#137a6e}.btn.quiet{background:#f7faf9;color:#627d7e}
+.btn.main{background:#137a6e;color:#fff;border-color:#137a6e}.btn.image{background:#e9f7f2;color:#116f63;border-color:#a9d8c9}.btn.quiet{background:#f7faf9;color:#627d7e}
 .cloud{font-size:12px;margin:10px 0 0;color:#77898b}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 18px;background:#203f42;color:#fff;border-radius:9px;display:none;z-index:5}
 @media(max-width:1080px){.picker{grid-template-columns:repeat(2,minmax(0,1fr))}.itemphoto{width:95px;height:95px;flex-basis:95px}.itemtop{gap:10px}}
@@ -75,16 +75,19 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   <div class="footerbar">
     <div class="actions">
       <button class="btn main" type="button" id="exportHTML" disabled>下載推薦單</button>
+      <button class="btn image" type="button" id="exportPNG" disabled>下載圖片 PNG</button>
       <button class="btn" type="button" id="copyList" disabled>複製文字</button>
       <button class="btn quiet" type="button" id="clearList" disabled>清空</button>
     </div>
     <p class="cloud" id="cloudStatus" role="status">正在讀取已核准的雲端圖片…</p>
+    <p class="cloud">PNG 採單欄橫式排列；清單較長時會下載包含多張圖片的 ZIP。</p>
   </div>
 </section>
 </main>
 </div>
 <div id="toast" role="status"></div>
 <script src="/recommendation-list/catalog.js"></script>
+<script src="/recommendation-list/png-export.js"></script>
 <script src="/recommendation-list/simple-list.js"></script>
 </body>
 </html>

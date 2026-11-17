@@ -100,7 +100,7 @@
     const start = editId ? active.selectionStart : null;
     const end = editId ? active.selectionEnd : null;
     get('selectedCount').textContent = '已選 ' + ids.length + ' 項';
-    for (const key of ['exportHTML', 'copyList', 'clearList']) {
+    for (const key of ['exportHTML', 'exportPNG', 'copyList', 'clearList']) {
       get(key).disabled = ids.length === 0;
     }
     if (!ids.length) {
@@ -364,21 +364,41 @@
     toast('已下載推薦單 HTML');
   }
 
+  let exportBusy = false;
   async function performExport(button, callback) {
+    if (exportBusy) return;
+    exportBusy = true;
     const before = button.textContent;
     button.disabled = true;
     button.textContent = '正在整理…';
     try {
-      if (await readyForExport()) callback();
+      if (await readyForExport()) await callback();
     } catch (error) {
       toast('無法完成匯出：' + (error.message || '未知錯誤'));
     } finally {
+      exportBusy = false;
       button.textContent = before;
       renderSelected();
     }
   }
 
   get('exportHTML').addEventListener('click', () => performExport(get('exportHTML'), exportDocument));
+  get('exportPNG').addEventListener('click', () => performExport(get('exportPNG'), async () => {
+    if (!window.RecommendationPng?.exportList) throw new Error('PNG 匯出模組尚未載入');
+    const items = ids.map(id => {
+      const p = byId.get(id);
+      return {
+        id: p.id,
+        name: p.name,
+        brand: p.brand || '',
+        price: priceOf(p),
+        description: descriptionOf(p),
+        image: photoData.get(id) || null
+      };
+    });
+    const pages = await window.RecommendationPng.exportList(items);
+    toast(pages === 1 ? 'PNG 圖片已下載' : '共 ' + pages + ' 頁 PNG 已打包 ZIP 下載');
+  }));
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') refreshCloud(true).catch(() => {});

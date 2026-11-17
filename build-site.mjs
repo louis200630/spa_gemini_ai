@@ -56,5 +56,10 @@ await writeFile(
   await readFile('simple-recommendations.js', 'utf8'),
   'utf8'
 );
+await writeFile(
+  join(recommendationDir, 'png-export.js'),
+  await readFile('recommendation-png-export.js', 'utf8'),
+  'utf8'
+);
 
 console.log('Built unchanged survey, original image-review, and simplified '+catalog.length+'-product recommendation list.');
