@@ -31,7 +31,7 @@ await writeFile(
 );
 
 const originalCatalog = await readFile('tools/產品選購清單.html', 'utf8');
-const catalogMatch = originalCatalog.match(/const BASE_PRODUCTS\\s*=\\s*(\\[[\\s\\S]*?\\]);/);
+const catalogMatch = originalCatalog.match(/const BASE_PRODUCTS\s*=\s*(\[[\s\S]*?\]);/);
 if (!catalogMatch) throw new Error('Cannot extract the original shopping-list product catalogue');
 const catalog = JSON.parse(catalogMatch[1]);
 const uniqueIds = new Set(catalog.map(p => p.id));
@@ -48,7 +48,7 @@ await writeFile(
 );
 await writeFile(
   join(recommendationDir, 'catalog.js'),
-  'window.RECOMMENDATION_PRODUCTS = ' + JSON.stringify(catalog) + ';\\n',
+  'window.RECOMMENDATION_PRODUCTS = ' + JSON.stringify(catalog) + ';',
   'utf8'
 );
 await writeFile(
