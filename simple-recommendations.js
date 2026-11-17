@@ -280,9 +280,15 @@
   });
 
   function namesText() {
-    return '為您推薦的產品：\n' +
-      ids.map((id, i) => (i + 1) + '. ' + byId.get(id).name).join('\n') +
-      '\n\n以上為產品參考清單，實際資訊請以官方網站為準。';
+    return '為您推薦的產品：\n\n' +
+      ids.map((id, i) => {
+        const product = byId.get(id);
+        const description = descriptionOf(product);
+        return (i + 1) + '. ' + product.name +
+          '\n價格：' + priceOf(product) +
+          (description ? '\n產品功能：' + description : '');
+      }).join('\n\n') +
+      '\n\n※ 本清單僅供選購參考，實際價格以官方網站為準。';
   }
 
   get('copyList').addEventListener('click', async () => {
@@ -316,28 +322,33 @@
 
   function exportDocument() {
     const rows = ids.map(id => {
-      const p = byId.get(id);
+      const product = byId.get(id);
       const image = photoData.get(id);
-      const photo = image ?
-        '<img alt="' + esc(p.name) + '" src="' + image + '">' :
-        '<span class="placeholder">圖片待補</span>';
-      return '<article class="product"><div class="pic">' + photo + '</div>' +
-        '<div class="info"><h2>' + esc(p.name) + '</h2><p>' + esc(p.brand || '') + '</p></div></article>';
+      const photo = image
+        ? '<img alt="' + esc(product.name) + '" src="' + image + '">'
+        : '<span class="placeholder">圖片待補</span>';
+      return '<article class="product">' +
+        '<div class="product-top"><div class="pic">' + photo + '</div>' +
+        '<div class="info"><p class="brand">' + esc(product.brand || '') + '</p>' +
+        '<h2>' + esc(product.name) + '</h2><div class="price">' + esc(priceOf(product)) + '</div></div></div>' +
+        '<p class="description">' + esc(descriptionOf(product)) + '</p></article>';
     }).join('');
+    const css = '*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",Arial,sans-serif;' +
+      'max-width:1100px;padding:20px;margin:20px auto;color:#243a40;background:white}' +
+      'h1{font-size:26px;margin:0 0 22px}.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}' +
+      '.product{border:1px solid #e0e8e7;border-radius:12px;padding:16px;min-width:0;break-inside:avoid}' +
+      '.product-top{display:flex;gap:13px;align-items:center}.pic{width:104px;height:104px;flex:0 0 104px;display:grid;place-items:center;' +
+      'background:#f2f6f5;border-radius:9px;overflow:hidden}.pic img{width:100%;height:100%;object-fit:contain;background:white}' +
+      '.placeholder{font-size:12px;color:#8b9da1}.info{min-width:0}.brand{color:#77888c;font-size:12px;margin:0}h2{font-size:17px;line-height:1.45;margin:6px 0}' +
+      '.price{font-size:14px;font-weight:bold;color:#226b62}.description{white-space:pre-wrap;font-size:13px;line-height:1.65;color:#53676c;margin:13px 0 0}' +
+      '.foot{font-size:11px;color:#87999b;margin:24px 0 0}' +
+      '@media(max-width:750px){.products{grid-template-columns:1fr}.product{padding:14px}}' +
+      '@media(max-width:450px){.pic{width:80px;height:80px;flex-basis:80px}h1{font-size:23px}h2{font-size:15px}}';
     const html = '<!doctype html><html lang="zh-TW"><head><meta charset="utf-8">' +
-      '<meta name="viewport" content="width=device-width, initial-scale=1"><title>專屬產品推薦清單</title>' +
-      '<style>*{box-sizing:border-box}body{font-family:Arial,"Noto Sans TC","Microsoft JhengHei",sans-serif;' +
-      'color:#253c43;max-width:820px;margin:35px auto;padding:0 20px;background:white}h1{font-size:27px;margin:0 0 10px}' +
-      '.intro{color:#657c83;font-size:14px;margin:0 0 24px}.product{display:flex;gap:18px;align-items:center;padding:18px 0;' +
-      'border-bottom:1px solid #e0e9e9;break-inside:avoid}.pic{width:108px;height:108px;flex-shrink:0;background:#f1f5f4;' +
-      'display:flex;align-items:center;justify-content:center;border-radius:10px;overflow:hidden}.pic img{width:100%;height:100%;' +
-      'object-fit:contain}.placeholder{font-size:12px;color:#9caeaf}h2{font-size:19px;margin:0 0 8px}' +
-      '.info p{color:#6e8188;font-size:13px;margin:0}.foot{font-size:11px;color:#82959b;margin-top:32px;line-height:1.6}' +
-      '@media(max-width:520px){h1{font-size:23px}.pic{width:80px;height:80px}.product{gap:12px}h2{font-size:16px}}' +
-      '@media print{@page{size:A4;margin:14mm}body{margin:0;max-width:none}}</style></head><body>' +
-      '<h1>為您推薦的產品</h1><p class="intro">以下是依照本次討論為您整理的產品參考清單。</p>' +
-      rows +
-      '<p class="foot">本清單僅供產品介紹及選購參考。商品包裝與資訊以台灣官方網站最新資料為準。</p>' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>專屬產品推薦清單</title><style>' + css + '</style></head><body>' +
+      '<h1>為您推薦的產品</h1><div class="products">' + rows + '</div>' +
+      '<p class="foot">本清單供產品介紹及選購參考，實際商品資訊與價格請以台灣官方網站為準。</p>' +
       '</body></html>';
     const blob = new Blob([html], {type:'text/html;charset=utf-8'});
     const url = URL.createObjectURL(blob);
@@ -348,7 +359,7 @@
     anchor.click();
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
-    toast('已下載可直接分享的推薦單 HTML');
+    toast('已下載推薦單 HTML');
   }
 
   async function performExport(button, callback) {
