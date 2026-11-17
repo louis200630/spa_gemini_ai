@@ -60,7 +60,7 @@
     const matches = catalog.filter(p =>
       !term || clean(p.id + ' ' + p.name + ' ' + p.brand).includes(term)
     );
-    get('filterCount').textContent = term ? '找到 ' + matches.length + ' 項' : '直接勾選即可加入推薦單';
+    get('filterCount').textContent = term ? '找到 ' + matches.length + ' 項' : '';
     const fragment = document.createDocumentFragment();
     for (const product of matches) {
       const label = document.createElement('label');
@@ -305,7 +305,7 @@
         textarea.remove();
         if (!copied) throw new Error('無法複製');
       }
-      toast('產品名稱已複製，可以貼到 LINE 或訊息');
+      toast('推薦清單已複製，可以貼到 LINE 或訊息');
     } catch { toast('複製失敗，請確認瀏覽器允許使用剪貼簿'); }
   });
 
