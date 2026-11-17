@@ -1,40 +1,51 @@
-# 台灣美安健康問卷與個人產品工具
+# 健康問卷與產品推薦工具
 
-正式網站：https://spa-gemini-ai.vercel.app/
+正式網址：
 
-## 三個獨立頁面
+- 健康問卷（維持原版）：https://spa-gemini-ai.vercel.app/
+- 圖片核對中心（保留原功能）：https://spa-gemini-ai.vercel.app/image-review/
+- 快速產品推薦清單（簡化版）：https://spa-gemini-ai.vercel.app/recommendation-list/
 
-1. **健康問卷**：`/`。使用 `spa_gemini_ai.html` 原樣建置，問卷題目、營養素、評分與自動推薦矩陣不因這次圖片雲端化而更動。
-2. **產品圖片核對中心**：`/image-review/`。原始上傳版 HTML：`tools/圖片核對中心.html`。選品、貼上官網圖片、核對，按「核准此圖」會**自動同步到私有雲端圖片庫**；撤回核准會從雲端移除。
-3. **專屬產品選購清單**：`/recommendation-list/`。原始上傳版 HTML：`tools/產品選購清單.html`。原有選品、貼上名單、修改清單、匯出顧客版 HTML、列印 PDF 等功能維持，並新增自動讀取已核准雲端圖片。
+兩個內部工具頁受 Vercel Basic Auth 驗證；健康問卷保持公開。兩者均使用固定網址，GitHub `main` 更新後由 Vercel 自動部署。
 
-兩個工具頁都受 `middleware.js` 的 Basic Authentication 保護（環境變數 `PRIVATE_TOOLS_PASSWORD`），不會將金鑰寫到網頁。工具頁讀寫圖片時使用 `/image-review/api/images` 或 `/recommendation-list/api/images`，由 `vercel.json` 改寫到 `api/product-images.js`；**API 自身也會再做 Basic Auth 驗證**。健康問卷保持公開。
+## 快速產品推薦清單
 
-## 雲端架構
+新頁面聚焦四件事：
 
-- Vercel Blob **Private** 圖片儲存空間 `spa-product-images-private`（香港區域 hkg1）。
-- `BLOB_READ_WRITE_TOKEN` 只存在 Vercel 伺服器端，並且只供 `api/product-images.js` 使用，沒有提供給前端。
-- 存放路徑 `product-images/approved/P001.jpg`、`product-images/records/P001.json`；同一產品 P ID 對應同一張核准主圖。可重複核准以更新圖片。
-- GET 列出核准 IDs / 依 ID 取 JPEG；POST 核准上傳；DELETE 撤回圖片。所有 API 均需登入、禁用回應快取。
-- 所有圖片儲存在雲端**而非 GitHub 部署檔案**，因此更換網站版本不會清空圖片庫。
-- 原始 `tools/*.html` 保留，`build-site.mjs` 在部署時額外插入 `cloud-sync-review.js`、`cloud-sync-cart.js`，不會更改健康問卷 HTML。
+1. 左側搜尋品名、品牌或產品 P 編號。
+2. 勾選產品；右側即時顯示圖片、品牌及產品名稱。
+3. 從 Vercel Private Blob 自動載入「圖片核對中心」已核准的圖片，不需每次匯入 ZIP。
+4. 選擇「下載推薦單」（含圖、離線可開啟 HTML）、「複製文字」（可貼 LINE）或「列印／PDF」。
 
-## 操作流程
+不提供品項數量、價格計算、產品文案修改、CSV 匯入及 ZIP 圖片匯入等設定，以維持操作簡單。已勾選的產品 ID 僅暫存在目前瀏覽器 localStorage；可按「清空」重置。
 
-**平時：** 在圖片核對中心選擇商品 → 從官網複製圖片 → Ctrl+V 貼上 → 勾選已核對 → 按「核准此圖」 → 顯示「已自動同步至雲端」。接著在產品選購清單中選取該商品，就會自動載入雲端圖片。日常流程**不必再下載 ZIP／重新匯入 ZIP**。
+**注意：** 這個簡化工具不依照健康問卷自動挑選商品，它是供內部人員勾選產品後產生客戶推薦清單。推薦給客戶的 HTML 會嵌入成功載入的產品圖片。未核准或無法讀取的圖片會顯示為「尚無圖片」。
 
-**舊照片首次遷移：** 若照片先前儲存在舊版 HTML 或舊瀏覽器，請先在圖片核對中心「還原既有圖片 ZIP」，再按「首次同步舊圖片」一次批次上傳。不同網站來源的本機 IndexedDB 無法直接自動共享。
+## 檔案對應
 
-**保留備份：** 仍可在圖片核對中心匯出已核准圖片 ZIP；產品選購清單也保留 ZIP 匯入、匯出顧客 HTML 與列印 PDF。
+- `spa_gemini_ai.html`：原始健康問卷，完整保留。
+- `tools/圖片核對中心.html`：原始圖片核對及批次 ZIP 工具，完整保留。
+- `cloud-sync-review.js`：人工核准後傳送照片到私有雲端並撤回圖片。
+- `tools/產品選購清單.html`：**先前完整功能版備份及產品資料來源**，不再發布在快速推薦清單網址。
+- `tools/簡易產品推薦清單.html`：現在發布的新頁面，提供搜尋、勾選與預覽。
+- `simple-recommendations.js`：勾選、跨頁圖片載入、複製文字、下載 HTML、列印／PDF 的程式。
+- `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 133 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
+- `api/product-images.js`：後端私有 Blob 圖片 API，驗證後才允許讀取、儲存或移除圖片。
+- `middleware.js`、`vercel.json`：保護工具頁以及 API 路由。
 
-**跨裝置：** 不同電腦或手機用相同工具頁登入後，都可讀取已核准的雲端圖片。需要同頁即時更新時，切換分頁回來或重新整理即可。
+## 圖片操作與備份
 
-## 維護與安全
+平時請到圖片核對中心：選產品 → 貼上圖片 → 勾選核對 → 核准。
+雲端核准成功後，即可回到快速產品推薦清單勾選對應商品，圖片會自動出現。
 
-- 頁面原始資料目前為 133 項商品；新產品如有增加，應同步維護兩個原始工具的產品 ID，避免圖片配錯。
-- 商品資料、價格、產品描述及健康問卷矩陣並未移到 Blob；**本次只雲端化核准圖片與圖片核對資訊**，不是完整的商品資料 SQL 資料庫。
-- 雲端圖片**不會自動變成健康問卷的推薦結果圖片**；只在兩個後台工具間自動同步。
-- 私有圖片不透過公開 Blob URL 提供，僅由通過帳號密碼認證的 Vercel API 讀取。
-- GitHub 儲存庫本身若是公開的，原始程式碼仍可能被瀏覽；程式碼內不包含 Blob token 或個人密碼。
-- 瀏覽器操作與實際上傳需從登入後工具頁測試；部署 READY 僅代表建置成功，不代表所有瀏覽器操作均已完成驗收。
-- 已儲存的圖片會使用 Vercel Blob 配額。Vercel Hobby 只允許非商業使用；若用於客戶銷售或商業業務，應使用符合條款的方案。
+舊版的本機已核准圖片可以先「還原既有圖片 ZIP」，再按「首次同步舊圖片」一次搬移。原始 ZIP 匯入／匯出仍在圖片核對中心，作為備份用途。
+
+所有圖片目前儲存在 Vercel 私有 Blob，並按 `product-images/approved/P001.jpg` 等 ID 命名。圖片管理金鑰存在 Vercel 環境變數，不會傳給前端。
+
+## 限制及驗收
+
+- 原始完整型錄中的產品名稱與其他資料未做外部官網更新核對。
+- 新版畫面與功能已經過程式語法、建置及部署狀態檢查，但還須登入瀏覽器實際確認圖片出現、HTML 下載與手機響應式顯示。
+- 目前 Vercel GitHub 儲存庫的公開性不因 Basic Auth 而改變；只有工具頁和雲端圖片 API 使用密碼保護。
+- 如作商業用途，請確保 Vercel 服務方案符合其商用條款。
+
