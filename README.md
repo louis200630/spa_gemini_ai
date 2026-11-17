@@ -1,39 +1,37 @@
-# 台灣美安健康問卷網站
+# 美安台灣健康問卷與個人產品工具
 
-正式網址：https://spa-gemini-ai.vercel.app/
+正式固定網站：https://spa-gemini-ai.vercel.app/
 
-## 頁面
-- `/`：原始健康問卷。直接從 `spa_gemini_ai.html` 原樣建置，保留問卷題目、推薦邏輯、營養素及產品矩陣，不再載入「客戶產品清單」外掛。
-- `/recommendation-list/`：獨立的「圖片與推薦清單製作」工具頁。可搜尋現有產品、手動加入品項、修改數量與說明、上傳封面與產品圖片，並匯出 PNG、CSV 或使用瀏覽器列印為 PDF。此工具不讀取問卷答案或自動推薦結果。
+## 頁面與公開範圍
 
-> 備註：因未取得先前所製作「上傳圖片＋推薦清單」頁面的原始檔，現階段子頁面是依所描述功能重新實作的獨立版本，非先前頁面逐字／逐像素搬移。
+- 健康問卷（公開）：`/`，原始檔為 `spa_gemini_ai.html`，完全原樣輸出，不修改題目、營養素、推薦矩陣或產品列表。
+- 產品圖片核對中心（個人使用）：`/image-review/`，內容原樣取自 `tools/圖片核對中心.html`。
+- 專屬產品選購清單（個人使用）：`/recommendation-list/`，內容原樣取自 `tools/產品選購清單.html`。
 
-## 部署
-本專案使用 GitHub + Vercel Git integration：
-1. Vercel Project：`spa-gemini-ai`
-2. GitHub Repo：`louis200630/spa_gemini_ai`
-3. Production Branch：`main`
-4. Build Command：`npm run build`
-5. Output Directory：`public`
+兩個個人工具頁由 `middleware.js` 的 HTTP Basic Auth 限制存取；健康問卷首頁不需登入。
+登入使用者名稱固定為 `owner`，密碼保存在 Vercel 專案的 sensitive environment variable `PRIVATE_TOOLS_PASSWORD`，不存於 GitHub。
+如要更換密碼，在 Vercel 修改 production/preview 環境變數並重新部署。
 
-日後提交 `main` 後，Vercel 成功部署新版，固定正式網址保持不變。
+## 使用順序
 
-## 維護方式
-- 修改健康問卷題目、評分、產品或營養矩陣：直接修改 `spa_gemini_ai.html`。
-- 商品主資料：子頁面的商品清單在建置時從原始 HTML 的 `PRODUCT_DB` 擷取，避免手動同步兩份。
-- 樂優選™胜肽益生亮白牙膏只加在獨立工具頁的手動產品清單中，不進問卷矩陣。
-- 修改子頁面：`recommendation-list.html` 與 `recommendation-list.js`。
-- 建置流程：`build-site.mjs`。
+1. 開啟 `/image-review/`，搜尋產品，從官方網站複製產品圖片或直接上傳，核准後匯出核准圖片 ZIP。
+2. 開啟 `/recommendation-list/`，按「匯入圖片庫 ZIP」，讀取剛剛匯出的圖片包。
+3. 透過選品名單貼上或從左側搜尋挑選產品，可直接編輯價格、文字及數量。
+4. 匯出顧客版 HTML 或列印／另存 PDF。
 
-## 隱私提醒
-這是純前端靜態網站。工具頁圖片與商品清單在瀏覽器處理，不上傳到本站的後端，也不會儲存在本站的資料庫；重新整理可能遺失未匯出內容。
+兩個原版工具使用瀏覽器 IndexedDB 和 localStorage 保存暫存狀態；改用新的 HTTPS 域名後，原先從 `file://` 使用所保存的資料無法直接沿用，請從之前匯出的 ZIP 還原。
 
-**工具子頁面目前沒有獨立登入限制。** 網址未放在公開問卷上，不等於存取控制；任何知道完整網址的人仍可能開啟工具。請勿在沒有保護機制的情況下處理敏感個人健康資料。
+## GitHub 與 Vercel
 
-## 本地建置
-Node.js（建議 LTS）：
-```bash
-npm run build
-```
+GitHub：`louis200630/spa_gemini_ai`；Vercel 專案：`spa-gemini-ai`；production branch：`main`。
+Git 提交到 `main` 後由 Vercel 自動建置，固定網址不變。
 
-產出的靜態網站位於 `public/`，包含首頁與獨立工具子頁面。
+靜態建置指令：`npm run build`；產物：`public/`；建置腳本：`build-site.mjs`。
+兩個工具均是原版 standalone HTML，使用原本離線 ZIP 實作，無須額外後端、圖片上傳服務或資料庫。
+
+## 安全與隱私
+
+- 工具子頁面需輸入登入帳密；不要在健康問卷中公開工具網址或密碼。
+- 本網站不將圖片和客戶清單寫入雲端資料庫；圖片仍保存在使用者瀏覽器，或由使用者下載為 ZIP。
+- 你的 GitHub 程式庫目前可能允許其他人檢視原始碼；網站登入不等同 GitHub 程式碼私有化。
+- 純瀏覽器儲存依裝置／瀏覽器／網域而區分，請定期備份 ZIP。
