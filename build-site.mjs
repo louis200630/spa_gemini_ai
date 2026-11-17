@@ -23,9 +23,12 @@ const tools = [
 for (const tool of tools) {
   const source = await readFile(tool.src, 'utf8');
   if (!source.includes('</html>')) throw new Error('Invalid tool HTML: ' + tool.src);
+  const cloudScript = tool.url === 'image-review' ? 'cloud-sync-review.js' : 'cloud-sync-cart.js';
+  const withSync = source.replace('</body>', '<script src="/' + tool.url + '/cloud-sync.js"></script>\\n</body>');
   const folder = join('public', tool.url);
   await mkdir(folder, { recursive: true });
-  await writeFile(join(folder, 'index.html'), source, 'utf8');
+  await writeFile(join(folder, 'index.html'), withSync, 'utf8');
+  await writeFile(join(folder, 'cloud-sync.js'), await readFile(cloudScript, 'utf8'), 'utf8');
 }
 
 console.log('Built unchanged questionnaire + two original private HTML tool subpages.');
