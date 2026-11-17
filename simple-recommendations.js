@@ -18,6 +18,28 @@
     if (Array.isArray(saved)) ids = [...new Set(saved.filter(id => byId.has(id)))];
   } catch {}
 
+  // Consultant-only edits: neither source products nor cloud images are modified.
+  const editsKey = 'ma-simple-recommendation-descriptions-v1';
+  let edits = Object.create(null);
+  try {
+    const data = JSON.parse(localStorage.getItem(editsKey) || '{}');
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      for (const [id, value] of Object.entries(data)) if (byId.has(id) && typeof value === 'string') edits[id] = value.slice(0, 400);
+    }
+  } catch {}
+  function preset(p) {
+    const head = String(p.headline || '').trim();
+    const brief = String(p.brief || '').trim().replace(/\s+/g, ' ');
+    const stop = brief.search(/[。！？]/);
+    let first = stop < 0 ? brief : brief.slice(0, stop + 1);
+    if ([...first].length > 88) first = [...first].slice(0, 88).join('').replace(/[，、；。\s]+$/, '') + '…';
+    const label = head === '產品介紹' ? '' : head;
+    return label && first && label !== first ? label + '：' + first : (label || first);
+  }
+  const descriptionOf = p => Object.prototype.hasOwnProperty.call(edits, p.id) ? edits[p.id] : preset(p);
+  const persistEdits = () => { try { localStorage.setItem(editsKey, JSON.stringify(edits)); } catch {} };
+  const priceOf = p => 'NT$' + (Number(p.price) || 0).toLocaleString('zh-TW');
+
   get('catalogCount').textContent = catalog.length + ' 項';
   const toast = message => {
     const element = get('toast');
@@ -71,12 +93,16 @@
   }
 
   function renderSelected() {
+    const active = document.activeElement;
+    const editId = active?.dataset?.description;
+    const start = editId ? active.selectionStart : null;
+    const end = editId ? active.selectionEnd : null;
     get('selectedCount').textContent = '已選 ' + ids.length + ' 項';
-    for (const key of ['exportHTML', 'copyList', 'printList', 'clearList']) {
+    for (const key of ['exportHTML', 'copyList', 'clearList']) {
       get(key).disabled = ids.length === 0;
     }
     if (!ids.length) {
-      selectedItems.innerHTML = '<div class="previewempty"><strong>還沒有選擇產品</strong>從左側勾選即可立即加入。</div>';
+      selectedItems.innerHTML = '<div class="previewempty">勾選上方產品，這裡會顯示推薦清單。</div>';
       return;
     }
     const fragment = document.createDocumentFragment();
@@ -103,17 +129,52 @@
       const brand = document.createElement('p');
       brand.className = 'itembrand';
       brand.textContent = product.brand || '';
-      info.append(title, brand);
+      const price = document.createElement('div');
+      price.className = 'itemprice';
+      price.textContent = priceOf(product);
+      info.append(brand, title, price);
       const remove = document.createElement('button');
       remove.className = 'itemremove';
       remove.type = 'button';
       remove.dataset.remove = id;
       remove.textContent = '移除';
       remove.setAttribute('aria-label', '移除 ' + product.name);
-      article.append(picture, info, remove);
+      const top = document.createElement('div');
+      top.className = 'itemtop';
+      top.append(picture, info, remove);
+      const edit = document.createElement('div');
+      edit.className = 'descriptionwrap';
+      const row = document.createElement('div');
+      row.className = 'desclabelrow';
+      const label = document.createElement('label');
+      label.htmlFor = 'description-' + id;
+      label.className = 'editlabel';
+      label.textContent = '產品功能描述';
+      const reset = document.createElement('button');
+      reset.type = 'button';
+      reset.className = 'resetdesc';
+      reset.dataset.resetDescription = id;
+      reset.textContent = '還原預設';
+      row.append(label, reset);
+      const textarea = document.createElement('textarea');
+      textarea.id = 'description-' + id;
+      textarea.className = 'itemdesc';
+      textarea.dataset.description = id;
+      textarea.maxLength = 400;
+      textarea.rows = 3;
+      textarea.value = descriptionOf(product);
+      edit.append(row, textarea);
+      article.append(top, edit);
       fragment.append(article);
     }
     selectedItems.replaceChildren(fragment);
+    if (editId && ids.includes(editId)) {
+      const field = selectedItems.querySelector('textarea[data-description="' + editId + '"]');
+      if (field) {
+        field.focus({preventScroll: true});
+        try { field.setSelectionRange(start, end); } catch {}
+      }
+    }
   }
 
   function update() {
@@ -184,7 +245,24 @@
     if (target.checked && approvedIds.has(id)) loadPhoto(id).catch(() => toast('圖片暫時無法載入'));
   });
 
+  selectedItems.addEventListener('input', event => {
+    const field = event.target.closest('textarea[data-description]');
+    if (!field || !byId.has(field.dataset.description)) return;
+    const p = byId.get(field.dataset.description);
+    if (field.value === preset(p)) delete edits[p.id];
+    else edits[p.id] = field.value;
+    persistEdits();
+  });
   selectedItems.addEventListener('click', event => {
+    const reset = event.target.closest('button[data-reset-description]');
+    if (reset && byId.has(reset.dataset.resetDescription)) {
+      const id = reset.dataset.resetDescription;
+      delete edits[id];
+      persistEdits();
+      const field = selectedItems.querySelector('textarea[data-description="' + id + '"]');
+      if (field) field.value = preset(byId.get(id));
+      return;
+    }
     const button = event.target.closest('button[data-remove]');
     if (!button) return;
     ids = ids.filter(id => id !== button.dataset.remove);
@@ -195,6 +273,8 @@
   get('clearList').addEventListener('click', () => {
     if (ids.length && confirm('確定清空所有已勾選產品？')) {
       ids = [];
+      edits = Object.create(null);
+      persistEdits();
       update();
     }
   });
@@ -286,7 +366,6 @@
   }
 
   get('exportHTML').addEventListener('click', () => performExport(get('exportHTML'), exportDocument));
-  get('printList').addEventListener('click', () => performExport(get('printList'), () => window.print()));
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') refreshCloud(true).catch(() => {});
