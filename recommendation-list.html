@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>推薦清單製作｜美安台灣</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#273449;background:#edf2f8}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(125deg,#e9eef8,#dde8ee);min-height:100vh}
+    button,input,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700}button:disabled{opacity:.45;cursor:not-allowed}
+    .dark{background:#26364b;color:white}.light{background:white;color:#31415b;border:1px solid #d6dfeb}.danger{color:#ab374b;background:#fdf2f4;border:1px solid #f7dce3}
+    input,textarea{border:1px solid #cfd9e8;border-radius:12px;background:white;padding:11px 12px;width:100%;color:#25334b}input[type=file]{padding:8px;font-size:13px}input[type=number]{width:80px}textarea{min-height:70px;resize:vertical}
+    .app{max-width:1280px;margin:auto;padding:30px 20px 80px}.app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}.app-header h1{font-size:clamp(25px,3vw,38px);margin:0 0 6px;letter-spacing:-.03em}.muted{color:#69788e;font-size:14px}.panel{background:#ffffffdc;border:1px solid #fff;border-radius:24px;padding:24px;box-shadow:0 9px 32px #29405f12}
+    .columns{display:grid;grid-template-columns:minmax(300px,420px) minmax(400px,1fr);gap:20px;align-items:start}.controls{display:grid;gap:16px}.group h2{margin:0 0 9px;font-size:17px}.row{display:flex;align-items:center;gap:10px}.row.wrap{flex-wrap:wrap}.field{display:grid;gap:7px;margin:10px 0}.field label{font-size:13px;font-weight:700}
+    .search-results{max-height:260px;overflow:auto;border:1px solid #e2e8f1;border-radius:12px;background:white}.search-results button{display:block;background:white;color:#26354b;text-align:left;padding:10px 12px;width:100%;border-radius:0;border-bottom:1px solid #eef2f7;font-size:13px}.search-results button:hover{background:#eff4ff}.search-results button span{display:block;color:#64748b;font-size:12px;font-weight:400;margin-top:3px}.search-results .empty{padding:12px;color:#7a889b;font-size:13px}
+    .items-editor{display:grid;gap:11px}.item-editor{background:white;border:1px solid #dfe6ef;padding:13px;border-radius:14px}.item-editor h3{font-size:14px;margin:0 0 7px}.item-editor .item-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.small{font-size:12px;color:#687991}.note{font-size:13px}.actions{display:flex;flex-wrap:wrap;gap:10px;padding:8px 0 0}
+    .preview-shell{position:sticky;top:14px;min-width:0}.preview-shell>.muted{margin:0 0 10px;text-align:right}
+    #print-area{background:white;min-height:730px;padding:36px 40px;max-width:100%;overflow:hidden;border-radius:8px;box-shadow:0 12px 28px #20324a17;color:#293b51}
+    #print-area .paper-brand{font-size:12px;font-weight:800;letter-spacing:.15em;color:#58708c;text-transform:uppercase}
+    #print-area h2{font-size:clamp(25px,3vw,36px);line-height:1.2;margin:12px 0;color:#243449}
+    .cover-image{width:100%;max-height:230px;object-fit:cover;border-radius:14px;margin:16px 0}.paper-subtitle{white-space:pre-line;color:#5a6b7d;font-size:14px;line-height:1.8}
+    .paper-items{margin:20px 0 0;display:grid;gap:14px}.paper-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid #e1e6ec;break-inside:avoid}
+    .paper-item img{width:86px;height:86px;object-fit:cover;border-radius:10px;background:#eff4fa;flex-shrink:0}.paper-item .placeholder{width:86px;height:86px;display:grid;place-items:center;flex-shrink:0;border-radius:10px;background:linear-gradient(140deg,#edf2f8,#e1e9f5);color:#70839a;font-size:27px}
+    .paper-item h3{font-size:16px;line-height:1.45;margin:0 0 4px}.paper-item .price{font-weight:800;white-space:nowrap}.paper-item .desc{font-size:12px;color:#64748b;line-height:1.6;white-space:pre-wrap;margin:5px 0}
+    .paper-total{display:flex;justify-content:flex-end;margin:20px 0;font-size:19px;font-weight:800}.paper-footer{margin-top:26px;padding-top:13px;border-top:1px solid #e1e6ec;color:#8a96a7;font-size:11px;line-height:1.65}
+    #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:white;background:#26354b;border-radius:20px;padding:11px 20px;box-shadow:0 6px 25px #26354b2a;display:none;z-index:99}
+    @media(max-width:900px){.columns{grid-template-columns:1fr}.preview-shell{position:static}.app{padding:18px 12px 48px}.panel{padding:18px}.paper-item img,.paper-item .placeholder{width:64px;height:64px}#print-area{padding:24px}}
+    @media print{body{background:white}.app{max-width:none;margin:0;padding:0}.app-header,.controls,.preview-shell>.muted,.actions{display:none!important}.columns{display:block}.preview-shell{margin:0}.panel{border:none;box-shadow:none;padding:0}#print-area{box-shadow:none;border-radius:0;padding:0;min-height:0}.paper-item{break-inside:avoid} @page{size:A4;margin:15mm}}
+  </style>
+  <script src="/recommendation-list/product-data.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="/recommendation-list/recommendation-list.js" defer></script>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div>
+      <div class="muted">個人使用工具 · 與健康問卷獨立</div>
+      <h1>圖片與推薦清單製作</h1>
+      <div class="muted">上傳圖片、選擇產品、編輯說明，匯出清單分享給客戶。</div>
+    </div>
+    <a href="/" class="light" style="text-decoration:none;padding:12px 16px;border-radius:12px;font-weight:700">← 返回健康問卷</a>
+  </header>
+  <div class="columns">
+    <div class="controls">
+      <section class="panel group">
+        <h2>① 清單內容</h2>
+        <div class="field"><label for="sheet-title">清單標題</label><input id="sheet-title" maxlength="80" value="專屬產品推薦清單"></div>
+        <div class="field"><label for="sheet-message">客戶說明（選填）</label><textarea id="sheet-message" placeholder="例如：依照今天討論的需求整理，以下是推薦清單。"></textarea></div>
+        <div class="field"><label for="sheet-cover">上傳封面圖片（選填）</label><input id="sheet-cover" type="file" accept="image/*"></div>
+      </section>
+      <section class="panel group">
+        <h2>② 選擇產品</h2>
+        <div class="field"><label for="product-search">搜尋產品名稱或品牌</label><input id="product-search" type="search" autocomplete="off" placeholder="例如：OPC、牙膏、若美芙"></div>
+        <div id="search-results" class="search-results" aria-live="polite"><div class="empty">開始輸入產品名稱即可搜尋。</div></div>
+        <div class="muted" style="margin:12px 0 6px">可加入多項產品、調整數量與替換產品圖片。</div>
+        <div id="selected-editors" class="items-editor"></div>
+      </section>
+      <section class="panel group">
+        <h2>③ 匯出清單</h2>
+        <div class="actions">
+          <button type="button" class="dark" id="btn-png">下載圖片 PNG</button>
+          <button type="button" class="light" id="btn-print">列印／另存 PDF</button>
+          <button type="button" class="light" id="btn-csv">下載 CSV</button>
+          <button type="button" class="danger" id="btn-reset">清空清單</button>
+        </div>
+        <p class="small">圖片只在目前瀏覽器內處理，不會上傳到伺服器。關閉或重新整理後未匯出的清單可能遺失。產品價格為參考售價。</p>
+        <p class="small">注意：本工具頁目前沒有獨立登入保護。知道網址的人也可能開啟，請勿填寫客戶敏感健康資料。</p>
+      </section>
+    </div>
+    <main class="panel preview-shell">
+      <p class="muted">清單即時預覽</p>
+      <article id="print-area">
+        <div class="paper-brand">Market Taiwan · Selection</div>
+        <h2 id="print-title">專屬產品推薦清單</h2>
+        <p id="print-message" class="paper-subtitle"></p>
+        <img id="print-cover" class="cover-image" alt="自訂封面" hidden>
+        <div id="print-items" class="paper-items"><p class="small">尚未加入任何產品，請從左側搜尋並新增。</p></div>
+        <div id="print-total" class="paper-total"></div>
+        <div class="paper-footer">本清單為商品介紹與參考，價格以台灣官方網站實際結帳資訊為準；不作為醫療診斷或治療建議。</div>
+      </article>
+    </main>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+</body>
+</html>
