@@ -5,5 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node build-site.mjs"
+  },
+  "dependencies": {
+    "@vercel/functions": "3.11.3"
   }
 }
