@@ -6,6 +6,27 @@ const approvedCloudIds = new Set();
 const cloudProductLoadedIds = new Set();
 const cloudProductLoading = new Map();
 let cloudCatalogReady = false;
+const cloudCachedIds = new Set(JSON.parse(localStorage.getItem('ma-cloud-cached-images') || '[]'));
+function rememberCloudCachedIds() {
+  try { localStorage.setItem('ma-cloud-cached-images', JSON.stringify([...cloudCachedIds])); } catch {}
+}
+async function clearCachedCloudImage(id) {
+  delete images[id];
+  cloudCachedIds.delete(id);
+  cloudProductLoadedIds.delete(id);
+  try {
+    const db = await openImageDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('images', 'readwrite');
+      tx.objectStore('images').delete(id);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  } catch {}
+  rememberCloudCachedIds();
+  renderCart();
+}
 
 const cloudCartNotice = document.createElement('div');
 cloudCartNotice.className = 'tiny-note';
@@ -42,6 +63,8 @@ async function loadCartImage(id) {
     const data = await cartDataUrl(await response.blob());
     await saveImage(id, data);
     cloudProductLoadedIds.add(id);
+    cloudCachedIds.add(id);
+    rememberCloudCachedIds();
     renderCart();
   })();
 
@@ -69,9 +92,11 @@ async function refreshCartCloud() {
     const response = await cartCloudFetch('/recommendation-list/api/images');
     const data = await response.json();
     const newIds = new Set((data.ids || []).filter(id => products.some(p => p.id === id)));
-    const oldIds = new Set(approvedCloudIds);
     approvedCloudIds.clear();
     for (const id of newIds) approvedCloudIds.add(id);
+    for (const id of [...cloudCachedIds]) {
+      if (!newIds.has(id)) await clearCachedCloudImage(id);
+    }
     // Refetch the selected images on return to this tab: an image may have
     // been replaced and re-approved from the image-review page.
     for (const item of selected) cloudProductLoadedIds.delete(item.id);
