@@ -90,6 +90,12 @@ async function cloudRefresh() {
     if (cloudApprovedIds.has(selected) && !cloudEditedIds.has(selected)) {
       cloudLoadedIds.delete(selected);
     }
+    // Preserve local unapproved replacement drafts after page reload.
+    for (const p of PRODUCTS) {
+      if (cloudApprovedIds.has(p.id) && images[p.id] && meta[p.id]?.approved === false) {
+        cloudEditedIds.add(p.id);
+      }
+    }
     cloudReady = true;
     cloudMessage('雲端圖片庫：' + cloudApprovedIds.size + ' 張已核准並同步');
     render();
@@ -219,7 +225,7 @@ restorePack = async function (file) {
 
 const backupExport = exportPack;
 $('exportBtn').onclick = async function () {
-  const needed = PRODUCTS.filter(p => cloudApprovedIds.has(p.id) && !images[p.id]);
+  const needed = PRODUCTS.filter(p => cloudApprovedIds.has(p.id) && !cloudLoadedIds.has(p.id));
   try {
     for (const p of needed) await cloudLoadImage(p.id);
     await backupExport();
