@@ -1,4 +1,14 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "rewrites": [
+    {
+      "source": "/image-review/api/images",
+      "destination": "/api/product-images"
+    },
+    {
+      "source": "/recommendation-list/api/images",
+      "destination": "/api/product-images"
+    }
+  ]
 }
