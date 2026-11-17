@@ -1,0 +1,297 @@
+'use strict';
+(() => {
+  const catalog = (window.RECOMMENDATION_PRODUCTS || []).filter(p => p && /^P\d{3,4}$/.test(p.id) && p.name);
+  const byId = new Map(catalog.map(p => [p.id, p]));
+  const storageKey = 'ma-simple-recommendations-v1';
+  const get = id => document.getElementById(id);
+  const picker = get('productPicker');
+  const selectedItems = get('selectedItems');
+  const photoData = new Map();
+  const pendingPhotos = new Map();
+  let approvedIds = new Set();
+  let cloudReady = false;
+  let cloudConnected = false;
+  let ids = [];
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (Array.isArray(saved)) ids = [...new Set(saved.filter(id => byId.has(id)))];
+  } catch {}
+
+  get('catalogCount').textContent = catalog.length + ' 項';
+  const toast = message => {
+    const element = get('toast');
+    element.textContent = message;
+    element.style.display = 'block';
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => { element.style.display = 'none'; }, 3000);
+  };
+
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
+    ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
+  const save = () => { try { localStorage.setItem(storageKey, JSON.stringify(ids)); } catch {} };
+  const clean = value => String(value || '').toLocaleLowerCase().normalize('NFKC');
+
+  function renderPicker() {
+    const term = clean(get('productSearch').value.trim());
+    const scroll = picker.scrollTop;
+    const matches = catalog.filter(p =>
+      !term || clean(p.id + ' ' + p.name + ' ' + p.brand).includes(term)
+    );
+    get('filterCount').textContent = term ? '找到 ' + matches.length + ' 項' : '直接勾選即可加入推薦單';
+    const fragment = document.createDocumentFragment();
+    for (const product of matches) {
+      const label = document.createElement('label');
+      label.className = 'productOption' + (ids.includes(product.id) ? ' chosen' : '');
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.checked = ids.includes(product.id);
+      check.dataset.id = product.id;
+      check.setAttribute('aria-label', '選擇 ' + product.name);
+      const content = document.createElement('span');
+      content.className = 'productText';
+      const title = document.createElement('span');
+      title.className = 'productName';
+      title.textContent = product.name;
+      const subtitle = document.createElement('span');
+      subtitle.className = 'productBrand';
+      subtitle.textContent = product.brand || product.id;
+      content.append(title, subtitle);
+      label.append(check, content);
+      fragment.append(label);
+    }
+    if (!matches.length) {
+      const empty = document.createElement('p');
+      empty.className = 'emptySearch';
+      empty.textContent = '找不到符合的產品';
+      fragment.append(empty);
+    }
+    picker.replaceChildren(fragment);
+    picker.scrollTop = scroll;
+  }
+
+  function renderSelected() {
+    get('selectedCount').textContent = '已選 ' + ids.length + ' 項';
+    for (const key of ['exportHTML', 'copyList', 'printList', 'clearList']) {
+      get(key).disabled = ids.length === 0;
+    }
+    if (!ids.length) {
+      selectedItems.innerHTML = '<div class="previewempty"><strong>還沒有選擇產品</strong>從左側勾選即可立即加入。</div>';
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    for (const id of ids) {
+      const product = byId.get(id);
+      if (!product) continue;
+      const article = document.createElement('article');
+      article.className = 'item';
+      const picture = document.createElement('div');
+      picture.className = 'itemphoto';
+      if (photoData.has(id)) {
+        const image = document.createElement('img');
+        image.alt = product.name;
+        image.src = photoData.get(id);
+        picture.append(image);
+      } else {
+        picture.textContent = approvedIds.has(id) ? '圖片讀取中' : '尚無圖片';
+      }
+      const info = document.createElement('div');
+      info.className = 'iteminfo';
+      const title = document.createElement('h4');
+      title.className = 'itemname';
+      title.textContent = product.name;
+      const brand = document.createElement('p');
+      brand.className = 'itembrand';
+      brand.textContent = product.brand || '';
+      info.append(title, brand);
+      const remove = document.createElement('button');
+      remove.className = 'itemremove';
+      remove.type = 'button';
+      remove.dataset.remove = id;
+      remove.textContent = '移除';
+      remove.setAttribute('aria-label', '移除 ' + product.name);
+      article.append(picture, info, remove);
+      fragment.append(article);
+    }
+    selectedItems.replaceChildren(fragment);
+  }
+
+  function update() {
+    save();
+    renderPicker();
+    renderSelected();
+  }
+
+  function readAsDataURL(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error('圖片讀取失敗'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function cloudFetch(url) {
+    const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+    if (!response.ok) throw new Error('雲端圖片讀取失敗（HTTP ' + response.status + '）');
+    return response;
+  }
+
+  async function loadPhoto(id) {
+    if (!approvedIds.has(id) || !ids.includes(id)) return;
+    if (photoData.has(id)) return;
+    if (pendingPhotos.has(id)) return pendingPhotos.get(id);
+    const task = (async () => {
+      const response = await cloudFetch('/recommendation-list/api/images?id=' + encodeURIComponent(id));
+      const photo = await readAsDataURL(await response.blob());
+      if (approvedIds.has(id)) photoData.set(id, photo);
+      renderSelected();
+    })();
+    pendingPhotos.set(id, task);
+    try { await task; }
+    finally { pendingPhotos.delete(id); }
+  }
+
+  async function refreshCloud(force = false) {
+    try {
+      const response = await cloudFetch('/recommendation-list/api/images');
+      const manifest = await response.json();
+      approvedIds = new Set((manifest.ids || []).filter(id => byId.has(id)));
+      cloudConnected = true;
+      cloudReady = true;
+      if (force) photoData.clear();
+      for (const id of [...photoData.keys()]) if (!approvedIds.has(id)) photoData.delete(id);
+      get('cloudStatus').textContent = '已連接雲端圖片庫 · 已核准 ' + approvedIds.size + ' 張圖片。';
+      renderSelected();
+      const results = await Promise.allSettled(ids.filter(id => approvedIds.has(id)).map(loadPhoto));
+      if (results.some(r => r.status === 'rejected')) {
+        get('cloudStatus').textContent = '已連接雲端圖片庫，但部分圖片載入失敗；可稍後重試。';
+      }
+    } catch (error) {
+      cloudReady = true;
+      cloudConnected = false;
+      get('cloudStatus').textContent = '雲端圖片暫時無法連線；仍可勾選並匯出文字推薦清單。';
+    }
+  }
+
+  picker.addEventListener('change', event => {
+    const target = event.target;
+    if (target.tagName !== 'INPUT' || !byId.has(target.dataset.id)) return;
+    const id = target.dataset.id;
+    if (target.checked && !ids.includes(id)) ids.push(id);
+    else if (!target.checked) ids = ids.filter(item => item !== id);
+    update();
+    if (target.checked && approvedIds.has(id)) loadPhoto(id).catch(() => toast('圖片暫時無法載入'));
+  });
+
+  selectedItems.addEventListener('click', event => {
+    const button = event.target.closest('button[data-remove]');
+    if (!button) return;
+    ids = ids.filter(id => id !== button.dataset.remove);
+    update();
+  });
+
+  get('productSearch').addEventListener('input', renderPicker);
+  get('clearList').addEventListener('click', () => {
+    if (ids.length && confirm('確定清空所有已勾選產品？')) {
+      ids = [];
+      update();
+    }
+  });
+
+  function namesText() {
+    return '為您推薦的產品：\n' +
+      ids.map((id, i) => (i + 1) + '. ' + byId.get(id).name).join('\n') +
+      '\n\n以上為產品參考清單，實際資訊請以官方網站為準。';
+  }
+
+  get('copyList').addEventListener('click', async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(namesText());
+      else {
+        const textarea = document.createElement('textarea');
+        textarea.value = namesText();
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.append(textarea);
+        textarea.select();
+        const copied = document.execCommand('copy');
+        textarea.remove();
+        if (!copied) throw new Error('無法複製');
+      }
+      toast('產品名稱已複製，可以貼到 LINE 或訊息');
+    } catch { toast('複製失敗，請確認瀏覽器允許使用剪貼簿'); }
+  });
+
+  async function readyForExport() {
+    if (!ids.length) { toast('請先勾選產品'); return false; }
+    if (!cloudReady) await refreshCloud();
+    const expected = ids.filter(id => approvedIds.has(id));
+    await Promise.allSettled(expected.map(loadPhoto));
+    const missing = expected.filter(id => !photoData.has(id));
+    if (!cloudConnected) return confirm('雲端圖片庫無法連線。仍要輸出不含雲端圖片的推薦清單嗎？');
+    if (missing.length) return confirm('有 ' + missing.length + ' 張已核准圖片尚未載入。要先輸出文字版推薦清單嗎？');
+    return true;
+  }
+
+  function exportDocument() {
+    const rows = ids.map(id => {
+      const p = byId.get(id);
+      const image = photoData.get(id);
+      const photo = image ?
+        '<img alt="' + esc(p.name) + '" src="' + image + '">' :
+        '<span class="placeholder">圖片待補</span>';
+      return '<article class="product"><div class="pic">' + photo + '</div>' +
+        '<div class="info"><h2>' + esc(p.name) + '</h2><p>' + esc(p.brand || '') + '</p></div></article>';
+    }).join('');
+    const html = '<!doctype html><html lang="zh-TW"><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1"><title>專屬產品推薦清單</title>' +
+      '<style>*{box-sizing:border-box}body{font-family:Arial,"Noto Sans TC","Microsoft JhengHei",sans-serif;' +
+      'color:#253c43;max-width:820px;margin:35px auto;padding:0 20px;background:white}h1{font-size:27px;margin:0 0 10px}' +
+      '.intro{color:#657c83;font-size:14px;margin:0 0 24px}.product{display:flex;gap:18px;align-items:center;padding:18px 0;' +
+      'border-bottom:1px solid #e0e9e9;break-inside:avoid}.pic{width:108px;height:108px;flex-shrink:0;background:#f1f5f4;' +
+      'display:flex;align-items:center;justify-content:center;border-radius:10px;overflow:hidden}.pic img{width:100%;height:100%;' +
+      'object-fit:contain}.placeholder{font-size:12px;color:#9caeaf}h2{font-size:19px;margin:0 0 8px}' +
+      '.info p{color:#6e8188;font-size:13px;margin:0}.foot{font-size:11px;color:#82959b;margin-top:32px;line-height:1.6}' +
+      '@media(max-width:520px){h1{font-size:23px}.pic{width:80px;height:80px}.product{gap:12px}h2{font-size:16px}}' +
+      '@media print{@page{size:A4;margin:14mm}body{margin:0;max-width:none}}</style></head><body>' +
+      '<h1>為您推薦的產品</h1><p class="intro">以下是依照本次討論為您整理的產品參考清單。</p>' +
+      rows +
+      '<p class="foot">本清單僅供產品介紹及選購參考。商品包裝與資訊以台灣官方網站最新資料為準。</p>' +
+      '</body></html>';
+    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = '專屬產品推薦清單-' + new Date().toLocaleDateString('sv-SE') + '.html';
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    toast('已下載可直接分享的推薦單 HTML');
+  }
+
+  async function performExport(button, callback) {
+    const before = button.textContent;
+    button.disabled = true;
+    button.textContent = '正在整理…';
+    try {
+      if (await readyForExport()) callback();
+    } catch (error) {
+      toast('無法完成匯出：' + (error.message || '未知錯誤'));
+    } finally {
+      button.textContent = before;
+      renderSelected();
+    }
+  }
+
+  get('exportHTML').addEventListener('click', () => performExport(get('exportHTML'), exportDocument));
+  get('printList').addEventListener('click', () => performExport(get('printList'), () => window.print()));
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshCloud(true).catch(() => {});
+  });
+
+  update();
+  refreshCloud().catch(() => {});
+})();
