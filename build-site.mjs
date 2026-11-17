@@ -14,7 +14,7 @@ await writeFile(join('public', 'index.html'), questionnaire, 'utf8');
 await writeFile(join('public', 'spa_gemini_ai.html'), questionnaire, 'utf8');
 
 // Keep the original image-review tool. The shopping-list page is a minimal
-// checkbox interface backed by the original 133-record product catalogue.
+// checkbox interface backed by the original product catalogue.
 const reviewSource = await readFile('tools/圖片核對中心.html', 'utf8');
 if (!reviewSource.includes('</html>')) throw new Error('Invalid original review HTML');
 const reviewDir = join('public', 'image-review');
