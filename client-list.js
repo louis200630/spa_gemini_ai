@@ -7,8 +7,8 @@
   if (!recommendations) return;
 
   // Confirmed manual-only product: never added to MATRIX_DB or nutrient recommendations.
-  if (!PRODUCT_DB.p135) {
-    PRODUCT_DB.p135 = {
+  if (!PRODUCT_DB['manual-usuals-toothpaste']) {
+    PRODUCT_DB['manual-usuals-toothpaste'] = {
       name: '樂優選™胜肽益生亮白牙膏',
       brand: '樂優選™ The Usuals',
       price: 'NT$340',
