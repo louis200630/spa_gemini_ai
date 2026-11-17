@@ -72,9 +72,9 @@ async function refreshCartCloud() {
     const oldIds = new Set(approvedCloudIds);
     approvedCloudIds.clear();
     for (const id of newIds) approvedCloudIds.add(id);
-    for (const id of cloudProductLoadedIds) {
-      if (!approvedCloudIds.has(id)) cloudProductLoadedIds.delete(id);
-    }
+    // Refetch the selected images on return to this tab: an image may have
+    // been replaced and re-approved from the image-review page.
+    for (const item of selected) cloudProductLoadedIds.delete(item.id);
     cloudCatalogReady = true;
     cloudCartNotice.textContent = '雲端圖片庫：已核准 ' + approvedCloudIds.size + ' 張；選入產品後會自動顯示圖片。ZIP 可作備份。';
     prefetchChosenCloudPhotos();
@@ -91,13 +91,14 @@ async function ensureExportPhotos() {
 
 function waitForImagesBefore(button, action) {
   button.addEventListener('click', async event => {
-    const needed = selected.some(item => approvedCloudIds.has(item.id) && !cloudProductLoadedIds.has(item.id));
+    const needed = !cloudCatalogReady || selected.some(item => approvedCloudIds.has(item.id) && !cloudProductLoadedIds.has(item.id));
     if (!needed) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     button.disabled = true;
     cloudCartNotice.textContent = '正在補齊清單圖片後匯出…';
     try {
+      if (!cloudCatalogReady) await refreshCartCloud();
       await ensureExportPhotos();
       action();
       cloudCartNotice.textContent = '圖片已載入，可正常匯出含圖版本。';
