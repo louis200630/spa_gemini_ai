@@ -75,19 +75,19 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   <div class="footerbar">
     <div class="actions">
       <button class="btn main" type="button" id="exportHTML" disabled>下載推薦單</button>
-      <button class="btn image" type="button" id="exportPNG" disabled>下載圖片 PNG</button>
+      <button class="btn image" type="button" id="exportJPG" disabled>下載圖片 JPG</button>
       <button class="btn" type="button" id="copyList" disabled>複製文字</button>
       <button class="btn quiet" type="button" id="clearList" disabled>清空</button>
     </div>
     <p class="cloud" id="cloudStatus" role="status">正在讀取已核准的雲端圖片…</p>
-    <p class="cloud">PNG 採單欄橫式排列；清單較長時會下載包含多張圖片的 ZIP。</p>
+    <p class="cloud">JPG 會匯出為一張單欄橫式長圖，方便手機下載儲存；太長時會提醒減少項目。</p>
   </div>
 </section>
 </main>
 </div>
 <div id="toast" role="status"></div>
 <script src="/recommendation-list/catalog.js"></script>
-<script src="/recommendation-list/png-export.js"></script>
+<script src="/recommendation-list/jpg-export.js"></script>
 <script src="/recommendation-list/simple-list.js"></script>
 </body>
 </html>

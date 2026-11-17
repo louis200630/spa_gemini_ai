@@ -100,7 +100,7 @@
     const start = editId ? active.selectionStart : null;
     const end = editId ? active.selectionEnd : null;
     get('selectedCount').textContent = '已選 ' + ids.length + ' 項';
-    for (const key of ['exportHTML', 'exportPNG', 'copyList', 'clearList']) {
+    for (const key of ['exportHTML', 'exportJPG', 'copyList', 'clearList']) {
       get(key).disabled = ids.length === 0;
     }
     if (!ids.length) {
@@ -383,8 +383,8 @@
   }
 
   get('exportHTML').addEventListener('click', () => performExport(get('exportHTML'), exportDocument));
-  get('exportPNG').addEventListener('click', () => performExport(get('exportPNG'), async () => {
-    if (!window.RecommendationPng?.exportList) throw new Error('PNG 匯出模組尚未載入');
+  get('exportJPG').addEventListener('click', () => performExport(get('exportJPG'), async () => {
+    if (!window.RecommendationJpg?.exportList) throw new Error('JPG 匯出模組尚未載入');
     const items = ids.map(id => {
       const p = byId.get(id);
       return {
@@ -396,8 +396,8 @@
         image: photoData.get(id) || null
       };
     });
-    const pages = await window.RecommendationPng.exportList(items);
-    toast(pages === 1 ? 'PNG 圖片已下載' : '共 ' + pages + ' 頁 PNG 已打包 ZIP 下載');
+    await window.RecommendationJpg.exportList(items);
+    toast('單張 JPG 長圖已下載，可從手機下載項目開啟並儲存');
   }));
 
   document.addEventListener('visibilitychange', () => {

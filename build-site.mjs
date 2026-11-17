@@ -57,8 +57,8 @@ await writeFile(
   'utf8'
 );
 await writeFile(
-  join(recommendationDir, 'png-export.js'),
-  await readFile('recommendation-png-export.js', 'utf8'),
+  join(recommendationDir, 'jpg-export.js'),
+  await readFile('recommendation-jpg-export.js', 'utf8'),
   'utf8'
 );
 
