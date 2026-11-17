@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>快速產品推薦清單</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;color:#1c2e35;background:#f5f7f8}
+*{box-sizing:border-box}body{margin:0;min-height:100vh}
+button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.42;cursor:not-allowed}
+a{color:#126b63}
+.page{max-width:1160px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:22px}
+header h1{font-size:clamp(22px,3vw,30px);margin:3px 0 7px}header p{color:#607178;margin:0;font-size:14px}
+.back{display:inline-block;text-decoration:none;background:white;border:1px solid #d8e1e3;padding:10px 14px;border-radius:10px;font-size:13px;white-space:nowrap}
+.eyebrow{color:#168174;font-size:12px;font-weight:700;letter-spacing:.08em}
+.workspace{display:grid;grid-template-columns:minmax(280px,390px) minmax(0,1fr);gap:18px;align-items:start}
+.panel{background:white;border:1px solid #dfe5e6;border-radius:14px;overflow:hidden;box-shadow:0 3px 14px rgba(20,47,57,.04)}
+.panelhead{padding:18px 18px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #ebeeee}
+.panelhead h2{font-size:17px;margin:0}.minor{font-size:12px;color:#718189}
+.searchbox{padding:15px;border-bottom:1px solid #ebeeee}
+.searchbox input{display:block;width:100%;padding:12px;border:1px solid #c9d6d6;background:#fcfdfd;border-radius:10px;outline-color:#1f8d7e}
+.searchinfo{margin:10px 1px 0;font-size:12px;color:#78878b}
+.picker{max-height:68vh;min-height:330px;overflow:auto;overscroll-behavior:contain}
+.productOption{display:flex;align-items:center;gap:12px;cursor:pointer;padding:13px 16px;border-bottom:1px solid #eef1f2;line-height:1.4}
+.productOption:hover{background:#f2faf7}.productOption.chosen{background:#f0faf6}
+.productOption input{flex-shrink:0;appearance:none;width:22px;height:22px;border:2px solid #a6bbb8;border-radius:6px;position:relative;margin:0;cursor:pointer}
+.productOption input:checked{background:#147b70;border-color:#147b70}
+.productOption input:checked:after{content:"✓";color:white;font-size:15px;font-weight:bold;position:absolute;left:3px;top:-3px}
+.productText{min-width:0;flex:1}.productName{font-size:14px;font-weight:650;display:block}.productBrand{font-size:12px;color:#72818a;display:block;margin-top:4px}
+.emptySearch{padding:25px;color:#77878e;text-align:center;font-size:14px}
+.preview{min-height:450px}
+.preview-intro{padding:22px 23px 10px}.preview-intro h3{font-size:22px;margin:0 0 8px}.preview-intro p{margin:0;color:#6c7c83;font-size:13px}
+.items{padding:0 22px 14px}
+.item{display:flex;gap:16px;padding:17px 0;border-bottom:1px solid #e8edef;align-items:center;break-inside:avoid}
+.item:last-child{border-bottom:none}
+.itemphoto{width:100px;height:100px;flex:0 0 100px;background:#f0f4f3;border-radius:10px;display:grid;place-items:center;overflow:hidden;border:1px solid #edf0f1;color:#9aabae;font-size:12px;text-align:center}
+.itemphoto img{width:100%;height:100%;object-fit:contain;background:white}
+.itemname{font-size:16px;font-weight:750;margin:0 0 5px;line-height:1.5}
+.itembrand{font-size:12px;color:#74838b;margin:0 0 6px}.itemheadline{font-size:13px;color:#465d64;line-height:1.6;margin:0}
+.iteminfo{min-width:0;flex:1}.itemremove{align-self:flex-start;background:transparent;border:0;color:#7b8f95;padding:5px 2px;font-size:12px;white-space:nowrap}.itemremove:hover{color:#a34e4a;text-decoration:underline}
+.previewempty{padding:90px 20px 110px;text-align:center;color:#74858c}.previewempty strong{display:block;font-size:19px;margin-bottom:8px;color:#4a6369}
+.footerbar{padding:15px 18px 18px;border-top:1px solid #e8eeee;background:#fbfdfc}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border-radius:9px;border:1px solid #c6d8d5;padding:10px 14px;background:white;color:#21695f;font-weight:700;font-size:13px;min-height:41px}
+.btn.main{background:#137a6e;border-color:#137a6e;color:white}.btn:hover:not(:disabled){filter:brightness(.96)}
+.btn.quiet{background:#f7faf9;color:#536d73}
+.cloud{margin:12px 0 0;color:#72848b;font-size:12px}
+.disclaimer{color:#859299;font-size:11px;line-height:1.55;margin:12px 22px 20px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#203f42;color:white;padding:10px 18px;max-width:90vw;border-radius:10px;display:none;box-shadow:0 6px 20px #1c343535;font-size:13px;z-index:5}
+@media(max-width:850px){.workspace{grid-template-columns:1fr}.picker{min-height:150px;max-height:37vh}header{flex-wrap:wrap}.preview{min-height:240px}.previewempty{padding:55px 20px}}
+@media(max-width:500px){.page{padding:16px 10px 40px}.panelhead{padding:14px}.preview-intro{padding:18px 15px 8px}.items{padding:0 15px 10px}.item{gap:11px}.itemphoto{width:78px;height:78px;flex-basis:78px}.itemname{font-size:14px}.btn{flex:1}.footerbar{padding:13px}}
+@media print{
+ @page{size:A4;margin:13mm}body{background:white;color:#243d41}.page{margin:0;max-width:none;padding:0}
+ header,.pickerpanel,.footerbar,.disclaimer,.itemremove,#toast{display:none!important}
+ .workspace{display:block}.panel,.preview{border:0;box-shadow:none;min-height:0}
+ .panelhead{border:0;padding:0 0 13px}.panelhead h2{font-size:18px}.panelhead .minor{display:none}
+ .preview-intro{padding:0 0 12px}.items{padding:0}
+ .item{padding:12px 0}.itemphoto{width:80px;height:80px;flex-basis:80px}
+ .preview-intro h3{font-size:24px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div><div class="eyebrow">私人選品工具</div><h1>快速產品推薦清單</h1><p>搜尋並勾選產品，右側即時生成可提供給客戶的推薦單。</p></div>
+  <a class="back" href="/image-review/">圖片核對中心</a>
+</header>
+<main class="workspace">
+<section class="panel pickerpanel" aria-label="勾選產品">
+  <div class="panelhead"><h2>① 勾選產品</h2><span class="minor" id="catalogCount">載入中</span></div>
+  <div class="searchbox">
+    <label for="productSearch" class="minor" style="display:block;margin-bottom:6px">搜尋品名、品牌或 P 編號</label>
+    <input id="productSearch" type="search" placeholder="例如：OPC、維生素 C" autocomplete="off">
+    <p class="searchinfo" id="filterCount"></p>
+  </div>
+  <div class="picker" id="productPicker"></div>
+</section>
+<section class="panel preview" aria-label="推薦單預覽">
+  <div class="panelhead"><h2>② 推薦單預覽</h2><span class="minor" id="selectedCount">已選 0 項</span></div>
+  <div class="preview-intro"><h3>為您推薦的產品</h3><p>以下是依照本次討論為您整理的產品參考清單。</p></div>
+  <div class="items" id="selectedItems"><div class="previewempty"><strong>還沒有選擇產品</strong>從左側勾選即可立即加入。</div></div>
+  <div class="footerbar">
+    <div class="actions">
+      <button class="btn main" type="button" id="exportHTML" disabled>下載推薦單</button>
+      <button class="btn" type="button" id="copyList" disabled>複製文字</button>
+      <button class="btn" type="button" id="printList" disabled>列印／PDF</button>
+      <button class="btn quiet" type="button" id="clearList" disabled>清空</button>
+    </div>
+    <p class="cloud" id="cloudStatus" role="status">正在讀取已核准的雲端圖片…</p>
+  </div>
+  <p class="disclaimer">本清單僅供產品介紹及選購參考。商品包裝與資訊以台灣官方網站最新資料為準。</p>
+</section>
+</main>
+</div>
+<div id="toast" role="status"></div>
+<script src="/recommendation-list/catalog.js"></script>
+<script src="/recommendation-list/simple-list.js"></script>
+</body>
+</html>
