@@ -29,7 +29,7 @@
 - `tools/產品選購清單.html`：**先前完整功能版備份及產品資料來源**，不再發布在快速推薦清單網址。
 - `tools/簡易產品推薦清單.html`：現在發布的新頁面，提供搜尋、勾選與預覽。
 - `simple-recommendations.js`：勾選、雲端圖片載入、價格顯示、可編輯短描述、複製文字及下載 HTML。
-- `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 133 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
+- `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 134 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
 - `api/product-images.js`：後端私有 Blob 圖片 API，驗證後才允許讀取、儲存或移除圖片。
 - `middleware.js`、`vercel.json`：保護工具頁以及 API 路由。
 
@@ -41,6 +41,14 @@
 舊版的本機已核准圖片可以先「還原既有圖片 ZIP」，再按「首次同步舊圖片」一次搬移。原始 ZIP 匯入／匯出仍在圖片核對中心，作為備份用途。
 
 所有圖片目前儲存在 Vercel 私有 Blob，並按 `product-images/approved/P001.jpg` 等 ID 命名。圖片管理金鑰存在 Vercel 環境變數，不會傳給前端。
+
+## 新增產品紀錄
+
+- **P134** 樂優選™胜肽益生亮白牙膏（The Usuals），參考價格 **NT$340**。
+- 此品項新增於 `tools/產品選購清單.html` 的 `BASE_PRODUCTS`，並以相同的 `P134` 同步加入 `tools/圖片核對中心.html` 的 `PRODUCTS`。
+- 勾選清單可搜尋「牙膏」、品牌與產品編號；圖片核對中心可貼上圖片並核准，上傳到私有雲端後供推薦清單使用。
+- 預設文字屬日常口腔清潔的介紹，可在推薦清單自行編輯，但不會改寫產品型錄。
+- **未變更健康問卷的產品庫或推薦矩陣**。兩個內部工具的 `P134` 是工具專用編號，與原問卷的 `p134` 不是同一筆產品；後續整併 ID 前需建立映射。
 
 ## 限制及驗收
 
