@@ -29,7 +29,7 @@
 - `tools/產品選購清單.html`：**先前完整功能版備份及產品資料來源**，不再發布在快速推薦清單網址。
 - `tools/簡易產品推薦清單.html`：現在發布的新頁面，提供搜尋、勾選與預覽。
 - `simple-recommendations.js`：勾選、雲端圖片載入、價格顯示、可編輯短描述、複製文字及下載 HTML。
-- `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 134 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
+- `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 135 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
 - `api/product-images.js`：後端私有 Blob 圖片 API，驗證後才允許讀取、儲存或移除圖片。
 - `middleware.js`、`vercel.json`：保護工具頁以及 API 路由。
 
@@ -44,7 +44,13 @@
 
 ## 新增產品紀錄
 
-- **P134** 樂優選™胜肽益生亮白牙膏（The Usuals），參考價格 **NT$340**。
+- **P135** 樂優選™紫錐菊複方膠囊食品（The Usuals），**UC NT$730**、規格 30 份，官方商品代號 `T1410SIBV`。
+- 官網同時標示 **SRP NT$1,040**；推薦工具依本次需求使用 **UC NT$730**，不是官方一般零售價。
+- 產品預設描述「日常守護力與活力保養」，可依個別客戶修改，且不回寫原始型錄或健康問卷。
+- `P135` 已同步至 `tools/產品選購清單.html` 的 `BASE_PRODUCTS` 與 `tools/圖片核對中心.html` 的 `PRODUCTS`；圖片待人工貼上並核准後才會同步到 Vercel Private Blob。
+- 官方來源：https://www.markettaiwan.com.tw/products/the-usuals-protect-plus
+
+- **P134** 樂優選™胜肽益生亮白牙膏（The Usuals），參考價格 **NT$305**，官方商品代號 `T13703`。
 - 此品項新增於 `tools/產品選購清單.html` 的 `BASE_PRODUCTS`，並以相同的 `P134` 同步加入 `tools/圖片核對中心.html` 的 `PRODUCTS`。
 - 勾選清單可搜尋「牙膏」、品牌與產品編號；圖片核對中心可貼上圖片並核准，上傳到私有雲端後供推薦清單使用。
 - 預設文字屬日常口腔清潔的介紹，可在推薦清單自行編輯，但不會改寫產品型錄。
