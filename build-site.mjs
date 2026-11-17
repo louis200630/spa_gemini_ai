@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 // Keep the entire health questionnaire unchanged.
 const questionnaire = await readFile('spa_gemini_ai.html', 'utf8');
-if (!/<\\/body>/i.test(questionnaire)) {
+if (!questionnaire.toLowerCase().includes('</body>')) {
   throw new Error('Original questionnaire HTML is invalid.');
 }
 
