@@ -7,6 +7,12 @@ const cloudEditedIds = new Set();
 const cloudLoadedIds = new Set();
 const cloudLoadingIds = new Map();
 let cloudReady = false;
+const previouslyCloudApproved = new Set(JSON.parse(localStorage.getItem('ma-cloud-review-ids') || '[]'));
+function rememberCloudIds() {
+  previouslyCloudApproved.clear();
+  for (const id of cloudApprovedIds) previouslyCloudApproved.add(id);
+  try { localStorage.setItem('ma-cloud-review-ids', JSON.stringify([...previouslyCloudApproved])); } catch {}
+}
 
 const cloudStatusLine = document.createElement('p');
 cloudStatusLine.className = 'muted';
@@ -82,9 +88,16 @@ async function cloudRefresh() {
   try {
     const response = await cloudRequest(cloudApiUrl);
     const payload = await response.json();
-    const before = new Set(cloudApprovedIds);
+    const oldIds = new Set(previouslyCloudApproved);
     cloudApprovedIds.clear();
     for (const id of payload.ids || []) if (byId[id]) cloudApprovedIds.add(id);
+    for (const id of oldIds) {
+      if (!cloudApprovedIds.has(id) && !cloudEditedIds.has(id)) {
+        ensureMeta(id).approved = false;
+      }
+    }
+    rememberCloudIds();
+    storeMeta();
     for (const id of cloudLoadedIds) if (!cloudApprovedIds.has(id)) cloudLoadedIds.delete(id);
     // A changed image on another device should be re-fetched when selected.
     if (cloudApprovedIds.has(selected) && !cloudEditedIds.has(selected)) {
@@ -141,6 +154,7 @@ async function cloudApproveOne(id) {
   });
   await response.json();
   cloudApprovedIds.add(id);
+  rememberCloudIds();
   cloudEditedIds.delete(id);
   cloudLoadedIds.add(id);
   cloudMessage('雲端圖片庫：' + cloudApprovedIds.size + ' 張已核准並同步');
@@ -153,6 +167,7 @@ async function cloudDeleteOne(id) {
     body: JSON.stringify({ id })
   });
   cloudApprovedIds.delete(id);
+  rememberCloudIds();
   cloudLoadedIds.delete(id);
   cloudEditedIds.delete(id);
   cloudMessage('雲端圖片庫：' + cloudApprovedIds.size + ' 張已核准並同步');
