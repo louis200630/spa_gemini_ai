@@ -58,7 +58,7 @@
     const term = clean(get('productSearch').value.trim());
     const scroll = picker.scrollTop;
     const matches = catalog.filter(p =>
-      !term || clean(p.id + ' ' + p.name + ' ' + p.brand).includes(term)
+      !term || clean(p.id + ' ' + (p.code || '') + ' ' + p.name + ' ' + p.brand).includes(term)
     );
     get('filterCount').textContent = term ? '找到 ' + matches.length + ' 項' : '';
     const fragment = document.createDocumentFragment();
