@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>健康問卷結果紀錄｜管理後台</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#293e46;background:#f3f6f7}
+*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}
+a{color:#176e70}.wrap{max-width:1160px;margin:auto;padding:28px 20px 70px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:27px;margin:0}h2{font-size:20px;margin:0 0 12px}h3{font-size:16px;margin:0 0 9px}
+.muted{color:#687f86;font-size:13px}.small{font-size:12px}.card{background:#fff;border:1px solid #dce5e7;box-shadow:0 6px 24px #21394a0b;border-radius:16px;padding:23px}
+button{border:1px solid #bed0d2;border-radius:9px;padding:9px 13px;background:#fff;color:#275b63;font-weight:700}
+button.primary{background:#185d68;border-color:#185d68;color:#fff}button.danger{color:#a53d4b;border-color:#efc4cb}
+button:disabled{opacity:.5;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #45aab0;outline-offset:2px}
+input{border:1px solid #c9dadd;border-radius:9px;padding:11px 12px;width:100%;font-size:15px}
+#login{max-width:440px;margin:54px auto}#login form{display:grid;gap:14px}
+#app{display:none}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar input{max-width:370px}.grid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+.list{display:grid;gap:9px;max-height:75vh;overflow:auto}.record{border:1px solid #dae6e8;border-radius:10px;padding:14px;text-align:left;display:grid;gap:6px;background:white;width:100%;font-weight:400}
+.record.selected{border-color:#21969b;background:#effafb}.record b{font-size:15px}
+.detail{min-height:420px}.placeholder{text-align:center;padding:80px 16px;color:#829298}
+.pills{display:flex;flex-wrap:wrap;gap:7px}.pill{display:inline-flex;border-radius:999px;background:#edf3f3;padding:5px 10px;font-size:12px}
+.section{border-top:1px solid #e2eaec;padding-top:18px;margin-top:22px}
+.scores{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.score{background:#eff5f5;border-radius:11px;padding:14px;text-align:center}.score strong{display:block;font-size:25px;color:#125d6a}
+.items{display:grid;gap:12px}.item{border:1px solid #e4eced;border-radius:11px;padding:14px}.item b{display:block;margin-bottom:7px}.item p{font-size:13px;line-height:1.7;margin:4px 0;color:#4b666c;white-space:pre-wrap}
+pre{white-space:pre-wrap}.note{padding:12px 14px;background:#eef5f6;border-radius:9px;font-size:13px;line-height:1.65}
+#message{min-height:20px;color:#a44b4b}#loginMessage{color:#a44b4b;min-height:20px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.list{max-height:260px}.scores{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{
+ body{background:white}.wrap{max-width:100%;padding:0}
+ header,.toolbar,#recordsPanel,#login,#message,.noprint{display:none!important}
+ .grid{display:block}.card,.detail{border:0;box-shadow:none;padding:0}
+ .item,.section,.score{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div><h1>健康問卷結果紀錄</h1><p class="muted">僅儲存已產生的完整結果；不保存填寫過程，也不收集姓名或電話。</p></div><a href="/">返回健康問卷</a></header>
+<section id="login" class="card">
+  <h2>管理員登入</h2>
+  <p class="muted">使用原先內部工具的管理密碼。此後台才需要登入，填寫問卷仍然免登入。</p>
+  <form id="loginForm">
+    <label for="password">管理員密碼</label>
+    <input id="password" type="password" autocomplete="current-password" required maxlength="160">
+    <button class="primary" type="submit">開啟歷史紀錄</button>
+  </form>
+  <p id="loginMessage" role="status"></p>
+</section>
+<main id="app">
+<div class="toolbar">
+  <div><b>已完成問卷</b><p class="muted">可查看完整快照、列印或刪除紀錄</p></div>
+  <div class="pills noprint"><button id="refresh" type="button">重新整理</button><button id="logout" type="button">登出</button></div>
+</div>
+<p id="message" role="status"></p>
+<div class="grid">
+  <section id="recordsPanel" class="card">
+    <h2>歷史清單</h2>
+    <input id="filter" type="search" placeholder="搜尋紀錄編號或完成日期" aria-label="搜尋已載入紀錄">
+    <p class="muted">依目前載入的紀錄搜尋；可按下方載入更多。</p>
+    <div id="records" class="list"></div>
+    <button id="more" class="noprint" type="button" style="margin-top:12px;display:none">載入更多紀錄</button>
+  </section>
+  <section id="detail" class="detail card"><div class="placeholder">選擇左側的一筆紀錄，即可查看當次完整結果。</div></section>
+</div>
+</main>
+</div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const API = '/api/health-results';
+let loaded = [], nextCursor = null, selectedId = null;
+const labels = {head:'頭腦狀態',skin:'外表膚況',gut:'消化代謝',lower:'身體機能'};
+function node(tag, cls, value) {
+  const el = document.createElement(tag);
+  if (cls) el.className = cls;
+  if (value !== undefined) el.textContent = String(value);
+  return el;
+}
+function fmt(date) {
+  const value = new Date(date);
+  return Number.isNaN(value.getTime()) ? '-' : new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(value);
+}
+function category(record) {
+  return record.kind === 'emergency' ? '特殊警示' : record.track === 'A' ? '健康改善 A' : '健康優化 B';
+}
+async function request(url, options) {
+  const response = await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
+  let data = {};
+  try { data = await response.json(); } catch {}
+  if (!response.ok) throw new Error(data.error || '請求失敗（HTTP '+response.status+'）');
+  return data;
+}
+function showLogin() {
+  $('login').style.display='block';$('app').style.display='none';selectedId=null;loaded=[];nextCursor=null;
+}
+function showApp() {
+  $('login').style.display='none';$('app').style.display='block';$('loginMessage').textContent='';
+}
+function entryText(record) {
+  return (record.id || '')+' '+fmt(record.createdAt)+' '+category(record);
+}
+function renderList() {
+  const query = $('filter').value.trim().toLowerCase();
+  const records = loaded.filter(r => entryText(r).toLowerCase().includes(query)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+  $('records').replaceChildren();
+  if (!records.length) $('records').append(node('p','muted','目前沒有符合條件的已完成紀錄。'));
+  for (const record of records) {
+    const el = node('button','record'+(selectedId===record.id?' selected':''));
+    el.type='button';
+    el.append(node('b','',fmt(record.createdAt)),node('span','muted',category(record)),node('span','small',record.id));
+    el.addEventListener('click',()=>openRecord(record.id));
+    $('records').append(el);
+  }
+  $('more').style.display=nextCursor?'block':'none';
+}
+async function loadPage(reset=false) {
+  $('message').textContent='正在讀取紀錄…';
+  try {
+    if(reset){loaded=[];nextCursor=null;selectedId=null;$('detail').replaceChildren(node('div','placeholder','選擇一筆紀錄查看結果。'));}
+    const url = API + (nextCursor?'?cursor='+encodeURIComponent(nextCursor):'');
+    const data = await request(url);
+    const seen = new Set(loaded.map(r=>r.id));
+    for(const rec of data.records||[]) if(!seen.has(rec.id)){loaded.push(rec);seen.add(rec.id);}
+    nextCursor=data.nextCursor||null;
+    renderList();
+    $('message').textContent='';
+  } catch (error) {$('message').textContent=error.message;}
+}
+function section(root,title) {
+  const el = node('section','section');el.append(node('h3','',title));root.append(el);return el;
+}
+function choices(root,title,values) {
+  const sec=section(root,title);
+  const pillBox=node('div','pills');
+  for(const value of values||[]) pillBox.append(node('span','pill',value.name));
+  if(!pillBox.childNodes.length)pillBox.append(node('span','muted','未選擇'));
+  sec.append(pillBox);
+}
+function itemList(root,title,items) {
+  const sec=section(root,title), list=node('div','items');
+  if(!(items||[]).length)list.append(node('p','muted','無'));
+  for(const entry of items||[]) {
+    const el=node('div','item');
+    el.append(node('b','',entry.name));
+    if(entry.brand)el.append(node('span','muted',entry.brand));
+    if(entry.description)el.append(node('p','',entry.description));
+    list.append(el);
+  }
+  sec.append(list);
+}
+function renderDetail(record) {
+  selectedId=record.id;renderList();
+  const root=$('detail');root.replaceChildren();
+  const heading=node('div','toolbar');
+  const titles=node('div');titles.append(node('h2','',record.kind==='emergency'?'請直接去看醫生':'精準營養與健康建議'));
+  titles.append(node('p','muted',fmt(record.createdAt)+' · '+category(record)+' · '+record.id));
+  heading.append(titles);
+  const actions=node('div','pills noprint');
+  const print=node('button','','列印結果');print.type='button';print.addEventListener('click',()=>window.print());
+  const remove=node('button','danger','刪除紀錄');remove.type='button';
+  remove.addEventListener('click',()=>deleteRecord(record.id));
+  actions.append(print,remove);heading.append(actions);root.append(heading);
+  const scores=node('div','scores');
+  for(const [key,label] of Object.entries(labels)){
+    const value=Number(record.scores?.[key]??0);
+    const score=node('div','score');score.append(node('span','muted',label),node('strong','',value.toFixed(2)+' / 10'));scores.append(score);
+  }
+  root.append(scores);
+  choices(root,'症狀選項',record.symptoms);
+  choices(root,'生活習慣',record.habits);
+  choices(root,'健康優化目標',record.goals);
+  const sum=section(root,'專屬健康解析');
+  sum.append(node('div','note',record.summary||'無'));
+  itemList(root,'推薦補充之核心營養素',record.nutrients);
+  itemList(root,'專屬推薦產品',record.products);
+  root.append(node('p','muted section','本結果僅供日常健康管理與產品了解參考，不作為疾病診斷或治療依據。'));
+}
+async function openRecord(id) {
+  $('message').textContent='正在開啟結果…';
+  try { const {record}=await request(API+'?id='+encodeURIComponent(id)); renderDetail(record);$('message').textContent='';}
+  catch(e){$('message').textContent=e.message;}
+}
+async function deleteRecord(id) {
+  if(!confirm('確定永久刪除此份健康問卷結果？此操作無法復原。'))return;
+  try {
+    await request(API+'?id='+encodeURIComponent(id),{method:'DELETE'});
+    loaded=loaded.filter(r=>r.id!==id);selectedId=null;
+    $('detail').replaceChildren(node('div','placeholder','紀錄已刪除。'));renderList();
+    $('message').textContent='紀錄已刪除。';
+  } catch(e){$('message').textContent=e.message;}
+}
+$('loginForm').addEventListener('submit',async event=>{
+  event.preventDefault();$('loginMessage').textContent='驗證中…';
+  const password=$('password').value;
+  try {
+    await request('/api/health-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});
+    $('password').value='';showApp();await loadPage(true);
+  }catch(e){$('loginMessage').textContent=e.message;}
+});
+$('logout').addEventListener('click',async()=>{try{await request('/api/health-admin',{method:'DELETE'});}catch{}showLogin();});
+$('refresh').addEventListener('click',()=>loadPage(true));
+$('filter').addEventListener('input',renderList);
+$('more').addEventListener('click',()=>loadPage(false));
+(async()=>{try{const state=await request('/api/health-admin');if(state.authenticated){showApp();await loadPage(true);}else showLogin();}catch(e){showLogin();$('loginMessage').textContent=e.message;}})();
+</script>
+</body>
+</html>
