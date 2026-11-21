@@ -1,5 +1,4 @@
 import { get, list, put, del } from '@vercel/blob';
-import { timingSafeEqual } from 'node:crypto';
 import { Readable } from 'node:stream';
 
 const PREFIX = 'product-images/';
@@ -7,15 +6,15 @@ const IMAGE_PREFIX = PREFIX + 'approved/';
 const META_PREFIX = PREFIX + 'records/';
 const NO_STORE = 'private, no-store';
 
-function authenticate(req) {
-  const secret = process.env.PRIVATE_TOOLS_PASSWORD;
-  if (!secret) return false;
-  const value = req.headers.authorization || '';
-  if (!value.startsWith('Basic ')) return false;
+// No account sign-in is required. This origin check only reduces accidental
+// browser cross-site writes; it is not a substitute for authentication.
+function sameOriginWrite(req) {
+  const origin = req.headers.origin;
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  if (typeof origin !== 'string' || typeof host !== 'string') return false;
   try {
-    const received = Buffer.from(value.slice(6), 'base64');
-    const expected = Buffer.from('owner:' + secret);
-    return received.length === expected.length && timingSafeEqual(received, expected);
+    const parsed = new URL(origin);
+    return parsed.protocol === 'https:' && parsed.host.toLowerCase() === host.toLowerCase();
   } catch {
     return false;
   }
@@ -25,7 +24,6 @@ function json(res, status, data) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', NO_STORE);
-  res.setHeader('Vary', 'Authorization');
   res.end(JSON.stringify(data));
 }
 
@@ -53,12 +51,11 @@ async function manifest() {
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', NO_STORE);
-  res.setHeader('Vary', 'Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 
-  if (!authenticate(req)) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Private Product Tools", charset="UTF-8"');
-    return json(res, 401, { error: '需要工具頁登入授權。' });
+  if ((req.method === 'POST' || req.method === 'DELETE') &&
+      (!sameOriginWrite(req) || !String(req.headers['content-type'] || '').toLowerCase().startsWith('application/json'))) {
+    return json(res, 403, { error: '僅接受本網站送出的 JSON 圖片管理請求。' });
   }
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return json(res, 503, { error: '雲端圖片庫尚未連線。' });

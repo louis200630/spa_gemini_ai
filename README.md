@@ -6,7 +6,7 @@
 - 圖片核對中心（保留原功能）：https://spa-gemini-ai.vercel.app/image-review/
 - 快速產品推薦清單（簡化版）：https://spa-gemini-ai.vercel.app/recommendation-list/
 
-兩個內部工具頁受 Vercel Basic Auth 驗證；健康問卷保持公開。兩者均使用固定網址，GitHub `main` 更新後由 Vercel 自動部署。
+健康問卷、推薦清單及圖片核對中心均免登入，可直接開啟固定網址；GitHub `main` 更新後由 Vercel 自動部署。**注意：免登入也表示知道公開網址的人可以瀏覽與操作工具頁。**
 
 ## 快速產品推薦清單
 
@@ -30,8 +30,8 @@
 - `tools/簡易產品推薦清單.html`：現在發布的新頁面，提供搜尋、勾選與預覽。
 - `simple-recommendations.js`：勾選、雲端圖片載入、價格顯示、可編輯短描述、複製文字及下載 HTML。
 - `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 141 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
-- `api/product-images.js`：後端私有 Blob 圖片 API，驗證後才允許讀取、儲存或移除圖片。
-- `middleware.js`、`vercel.json`：保護工具頁以及 API 路由。
+- `api/product-images.js`：後端私有 Blob 圖片 API；免登入讀取，新增與刪除圖片只接受同源網頁的 JSON 請求（此檢查無法取代身分驗證）。
+- `vercel.json`：工具頁和雲端圖片 API 的路由設定；不再使用 Basic Auth Middleware。
 
 ## 圖片操作與備份
 
@@ -40,7 +40,7 @@
 
 舊版的本機已核准圖片可以先「還原既有圖片 ZIP」，再按「首次同步舊圖片」一次搬移。原始 ZIP 匯入／匯出仍在圖片核對中心，作為備份用途。
 
-所有圖片目前儲存在 Vercel 私有 Blob，並按 `product-images/approved/P001.jpg` 等 ID 命名。圖片管理金鑰存在 Vercel 環境變數，不會傳給前端。
+所有圖片目前儲存在 Vercel 私有 Blob，並按 `product-images/approved/P001.jpg` 等 ID 命名。Blob 存取權杖仍留在 Vercel 伺服器端，不會傳給前端；工具頁與圖片 API 已取消帳密驗證，同源請求檢查不構成真正的存取控制。
 
 ## 新增產品紀錄
 
@@ -70,7 +70,7 @@
 ## 限制及驗收
 
 - 原始完整型錄中的產品名稱與其他資料未做外部官網更新核對。
-- 新版畫面與功能已經過程式語法、建置及部署狀態檢查，但還須登入瀏覽器實際確認圖片出現、HTML 下載與手機響應式顯示。
-- 目前 Vercel GitHub 儲存庫的公開性不因 Basic Auth 而改變；只有工具頁和雲端圖片 API 使用密碼保護。
+- 新版畫面與功能已經過程式語法、建置及部署狀態檢查，但還須在瀏覽器實際確認圖片出現、HTML 下載與手機響應式顯示。
+- GitHub 儲存庫為公開；取消 Basic Auth 後，三個頁面及圖片讀取皆可匿名存取。圖片核對中心亦可在同源瀏覽器中新增或刪除圖片，請勿將工具網址視為私人空間。
 - 如作商業用途，請確保 Vercel 服務方案符合其商用條款。
 
