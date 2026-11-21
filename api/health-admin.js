@@ -44,7 +44,7 @@ export default function handler(req, res) {
   if ((req.method === 'POST' || req.method === 'DELETE') && !sameOrigin(req))
     return respond(res, 403, { error: '無效的登入請求。' });
   if (req.method === 'DELETE') {
-    res.setHeader('Set-Cookie', COOKIE + '=; Path=/api/health-; HttpOnly; Secure; SameSite=Strict; Max-Age=0');
+    res.setHeader('Set-Cookie', COOKIE + '=; Path=/api/; HttpOnly; Secure; SameSite=Strict; Max-Age=0');
     return respond(res, 200, { ok: true });
   }
   if (req.method !== 'POST') {
@@ -56,6 +56,6 @@ export default function handler(req, res) {
   const supplied = req.body && typeof req.body === 'object' ? req.body.password : '';
   if (typeof supplied !== 'string' || supplied.length > 160 || !safeEqual(supplied, password()))
     return respond(res, 401, { error: '管理員密碼錯誤。' });
-  res.setHeader('Set-Cookie', COOKIE + '=' + signedCookie() + '; Path=/api/health-; HttpOnly; Secure; SameSite=Strict; Max-Age=' + MAX_AGE);
+  res.setHeader('Set-Cookie', COOKIE + '=' + signedCookie() + '; Path=/api/; HttpOnly; Secure; SameSite=Strict; Max-Age=' + MAX_AGE);
   return respond(res, 200, { ok: true });
 }
