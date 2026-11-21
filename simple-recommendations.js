@@ -30,7 +30,7 @@
   function preset(p) {
     const head = String(p.headline || '').trim();
     const brief = String(p.brief || '').trim().replace(/\s+/g, ' ');
-    const expandedDefaults = new Set(['P069', 'P075', 'P079', 'P118', 'P123', 'P126', 'P132']);
+    const expandedDefaults = new Set(['P069', 'P075', 'P079', 'P118', 'P123', 'P126', 'P132', 'P136']);
     if (expandedDefaults.has(p.id)) return head ? '【' + head + '】 ' + brief : brief;
     const stop = brief.search(/[。！？]/);
     let first = stop < 0 ? brief : brief.slice(0, stop + 1);
