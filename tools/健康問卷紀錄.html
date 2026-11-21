@@ -92,11 +92,14 @@ async function request(url, options) {
   const response = await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
   let data = {};
   try { data = await response.json(); } catch {}
+  if (response.status === 401 && url.startsWith(API)) showLogin();
   if (!response.ok) throw new Error(data.error || '請求失敗（HTTP '+response.status+'）');
   return data;
 }
 function showLogin() {
   $('login').style.display='block';$('app').style.display='none';selectedId=null;loaded=[];nextCursor=null;
+  $('password').value=''; $('filter').value=''; $('records').replaceChildren();
+  $('detail').replaceChildren(node('div','placeholder','請登入後查看歷史結果。'));
 }
 function showApp() {
   $('login').style.display='none';$('app').style.display='block';$('loginMessage').textContent='';
