@@ -29,7 +29,7 @@
 - `tools/產品選購清單.html`：**先前完整功能版備份及產品資料來源**，不再發布在快速推薦清單網址。
 - `tools/簡易產品推薦清單.html`：現在發布的新頁面，提供搜尋、勾選與預覽。
 - `simple-recommendations.js`：勾選、雲端圖片載入、價格顯示、可編輯短描述、複製文字及下載 HTML。
-- `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 136 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
+- `build-site.mjs`：讀取原始清單 HTML 的 `BASE_PRODUCTS`（目前 140 項），自動生成 `recommendation-list/catalog.js`，避免再手動維護第二套產品名稱。
 - `api/product-images.js`：後端私有 Blob 圖片 API，驗證後才允許讀取、儲存或移除圖片。
 - `middleware.js`、`vercel.json`：保護工具頁以及 API 路由。
 
@@ -43,6 +43,9 @@
 所有圖片目前儲存在 Vercel 私有 Blob，並按 `product-images/approved/P001.jpg` 等 ID 命名。圖片管理金鑰存在 Vercel 環境變數，不會傳給前端。
 
 ## 新增產品紀錄
+
+- **Smarter Sachet™ 拆分新增**：日安飲 `P138`／`T14527`（莓果風味、30 包、NT$1,960）、夜舒飲 `P139`／`T14528`（酸櫻桃風味、30 包、NT$1,960），以及官方組合方案 `P140`／`T14526`（日夜各30包，官網現售 NT$3,250；單買兩盒總價 NT$3,920）。三筆都有獨立短標題、成分、描述，推薦清單可完整顯示及勾選；未加入健康問卷矩陣。
+- **核對中心同步**：補齊先前遺漏的 `P137`，以及新增的 `P138`–`P140`；圖片仍需使用者於核對中心上傳與核准。官方來源：https://tw.isotonix.com/product/smarter-sachet/?id=5828097&idType=product。BV 尚未取得官方可靠資料，故保留空白而非填 0。
 
 - **P136** Tower+™必需胺基酸粉末食品（Tower+™），建議售價 **NT$1,420**、30 份、官方代號 `T6651`、BV 20。已同步至 `BASE_PRODUCTS` 與圖片核對中心 `PRODUCTS`；推薦清單可搜尋商品名、`P136`、`T6651` 並勾選。
 - **P136 文案**：`【健身肌肉營養・關鍵胺基酸補給】` 起首的已確認文字，完整呈現在簡化推薦清單中（不套用既有的第一句截斷）；**建檔時未修改問卷；後續依需求已另外加入既有三項問卷矩陣；其他產品文案不變**。
