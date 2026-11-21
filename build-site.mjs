@@ -62,4 +62,13 @@ await writeFile(
   'utf8'
 );
 
-console.log('Built unchanged survey, original image-review, and simplified '+catalog.length+'-product recommendation list.');
+// Private health survey results archive: public page only contains the login UI.
+const historyDir = join('public', 'health-history');
+await mkdir(historyDir, { recursive: true });
+await writeFile(
+  join(historyDir, 'index.html'),
+  await readFile('tools/健康問卷紀錄.html', 'utf8'),
+  'utf8'
+);
+
+console.log('Built survey with final-result archive, image review, '+catalog.length+'-product recommendation list, and protected health history.');
