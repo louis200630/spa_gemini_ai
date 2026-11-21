@@ -30,7 +30,7 @@
   function preset(p) {
     const head = String(p.headline || '').trim();
     const brief = String(p.brief || '').trim().replace(/\s+/g, ' ');
-    const expandedDefaults = new Set(['P007', 'P049', 'P069', 'P070', 'P071', 'P072', 'P073', 'P074', 'P075', 'P076', 'P077', 'P078', 'P079', 'P080', 'P081', 'P082', 'P083', 'P084', 'P085', 'P086', 'P087', 'P088', 'P089', 'P090', 'P091', 'P092', 'P093', 'P094', 'P095', 'P096', 'P097', 'P098', 'P118', 'P123', 'P126', 'P132', 'P136']);
+    const expandedDefaults = new Set(['P007', 'P049', 'P069', 'P070', 'P071', 'P072', 'P073', 'P074', 'P075', 'P076', 'P077', 'P078', 'P079', 'P080', 'P081', 'P082', 'P083', 'P084', 'P085', 'P086', 'P087', 'P088', 'P089', 'P090', 'P091', 'P092', 'P093', 'P094', 'P095', 'P096', 'P097', 'P098', 'P118', 'P119', 'P120', 'P121', 'P122', 'P123', 'P124', 'P125', 'P126', 'P132', 'P136']);
     if (expandedDefaults.has(p.id)) return head ? '【' + head + '】 ' + brief : brief;
     const stop = brief.search(/[。！？]/);
     let first = stop < 0 ? brief : brief.slice(0, stop + 1);
