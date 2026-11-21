@@ -245,6 +245,10 @@
                 </div>
             </div>
 
+            <label class="flex items-start gap-3 rounded-xl bg-white/65 border border-slate-200 px-4 py-3 text-[13px] leading-relaxed text-slate-600 cursor-pointer">
+                <input type="checkbox" id="result-storage-consent" class="mt-1 w-5 h-5 shrink-0 accent-slate-800">
+                <span>我了解並同意：<strong>僅在完成問卷並產生結果後</strong>，系統才會將本次自評分數、選擇、營養素分析及推薦產品匿名儲存至私有雲端，供問卷提供者日後查閱，直到刪除為止；不收集姓名及聯絡方式，也不保存填寫過程。如需刪除紀錄可向問卷提供者提出。</span>
+            </label>
             <!-- 下一步按鈕，移除懸浮動畫保持沉穩 -->
             <button id="btn-next-stage1" class="mt-4 w-full py-4 rounded-2xl bg-slate-800 text-white font-bold text-lg shadow-xl shadow-slate-800/20 hover:bg-slate-700 transition-colors">
                 下一步 ➔
@@ -382,6 +386,10 @@
                 🔗 分享專屬菜單
             </button>
         </div>
+        <div class="glass-panel px-6 py-4 rounded-[1.5rem] flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <p id="result-save-status" class="text-[13px] text-slate-600" role="status">問卷結果準備儲存…</p>
+            <button id="result-save-retry" type="button" hidden class="px-4 py-2 rounded-lg bg-slate-800 text-white font-bold text-[13px]">重新儲存結果</button>
+        </div>
     </section>
     
     <!-- ================= STAGE 5: 緊急狀況 (極低分防護) ================= -->
@@ -397,6 +405,8 @@
             <h2 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-wider mb-2">請直接去看醫生</h2>
             <p class="text-slate-500 text-lg font-medium mb-4">系統偵測到您的身體狀態可能需要專業醫療人員的立即協助。</p>
             
+            <p id="emergency-save-status" class="text-[13px] text-slate-600" role="status">提醒結果準備儲存…</p>
+            <button id="emergency-save-retry" type="button" hidden class="px-4 py-2 rounded-lg border border-slate-300 text-slate-800 font-bold text-[13px]">重新儲存結果</button>
             <button class="btn-restart px-8 py-4 mt-4 rounded-xl bg-slate-800 text-white font-bold text-lg shadow-lg hover:bg-slate-700 transition-colors w-full md:w-auto">
                 🔄 再測一次
             </button>
@@ -3389,6 +3399,13 @@
         };
 
         let radarChartInstance = null;
+        // The archive stores only the finished result; nothing is persisted mid-survey.
+        let archiveSaveId = null;
+        let archiveSnapshot = null;
+        let archiveSaveComplete = false;
+        let archiveSaveBusy = false;
+        let archiveSequence = 0;
+        window.currentReportSummary = '';
 
         // --- STREAMING_CHUNK:Stage 1 Slider Visualization ---
         const sliders = ['head', 'skin', 'gut', 'lower'];
@@ -3464,12 +3481,20 @@
             
             if (newStage === 4) {
                 renderStage4();
+                saveCompletedResult('normal');
+            }
+            if (newStage === 5) {
+                saveCompletedResult('emergency');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // Stage 1 -> Stage 2 (or 5 for Emergency)
         document.getElementById('btn-next-stage1').addEventListener('click', () => {
+            if (!document.getElementById('result-storage-consent').checked) {
+                showToast('請先勾選問卷結果儲存同意。');
+                return;
+            }
             const totalScore = state.scores.head + state.scores.skin + state.scores.gut + state.scores.lower;
 
             // ===== 新增防護機制：若總分過低，直接導向緊急就醫畫面 =====
@@ -4238,6 +4263,7 @@
                     `讓你從配方與功能理解不同選擇，作為日常保養與營養管理的參考。`;
             }
 
+            window.currentReportSummary = summary;
             typeWriter(summary, container);
         }
 
@@ -4259,6 +4285,78 @@
             type();
         }
 
+
+        // Save one immutable-in-practice snapshot at the moment the report is ready.
+        // A retry reuses the same UUID; it never generates a second list entry.
+        function buildCompletedSnapshot(kind) {
+            if (!archiveSaveId) archiveSaveId = crypto.randomUUID();
+            const symptomItems = state.symptoms.map(id => ({
+                id, name: getSymptomById(id)?.name || id
+            }));
+            const habitItems = state.habits.map(id => ({
+                id, name: getHabitById(id)?.name || id
+            }));
+            const goalItems = state.goals.map(id => ({
+                id, name: GOALS_DB.find(goal => goal.id === id)?.name || id
+            }));
+            return {
+                submissionId: archiveSaveId,
+                consent: true,
+                kind,
+                track: state.track,
+                scores: { ...state.scores },
+                symptoms: symptomItems,
+                habits: habitItems,
+                goals: goalItems,
+                summary: kind === 'emergency'
+                    ? '自評總分過低，建議優先尋求專業醫療人員評估。'
+                    : (window.currentReportSummary || ''),
+                nutrients: kind === 'emergency' ? [] :
+                    (window.currentRecNutrients || []).map(name => ({
+                        id: name, name, description: NUTRIENT_DB[name]?.desc || ''
+                    })),
+                products: kind === 'emergency' ? [] :
+                    (window.currentRecProducts || []).map(product => ({
+                        id: product.id, name: product.name, brand: product.brand || '',
+                        description: product.desc || ''
+                    }))
+            };
+        }
+        async function saveCompletedResult(kind) {
+            if (archiveSaveComplete || archiveSaveBusy) return;
+            const isEmergency = kind === 'emergency';
+            const status = document.getElementById(isEmergency ? 'emergency-save-status' : 'result-save-status');
+            const retry = document.getElementById(isEmergency ? 'emergency-save-retry' : 'result-save-retry');
+            const sequence = archiveSequence;
+            try {
+                archiveSaveBusy = true;
+                retry.hidden = true;
+                status.textContent = '正在自動備份完成的問卷結果…';
+                if (!archiveSnapshot) archiveSnapshot = buildCompletedSnapshot(kind);
+                const response = await fetch('/api/health-results', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    keepalive: true,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(archiveSnapshot)
+                });
+                const data = await response.json();
+                if (!response.ok || !data.ok) throw new Error(data.error || '雲端儲存失敗');
+                if (sequence !== archiveSequence) return;
+                archiveSaveComplete = true;
+                status.textContent = '✓ 結果已備份成功 · 紀錄編號 ' + data.id.slice(0, 8).toUpperCase();
+            } catch (error) {
+                if (sequence !== archiveSequence) return;
+                status.textContent = '結果尚未備份成功（' + (error.message || '連線失敗') + '），請重新儲存。';
+                retry.hidden = false;
+            } finally {
+                if (sequence === archiveSequence) archiveSaveBusy = false;
+            }
+        }
+        document.getElementById('result-save-retry').addEventListener('click', () => saveCompletedResult('normal'));
+        document.getElementById('emergency-save-retry').addEventListener('click', () => saveCompletedResult('emergency'));
+
         // 重置應用程式狀態功能 (供正常結果與緊急結果共用)
         function resetApp() {
             // 重置滑桿到預設值 2
@@ -4273,6 +4371,19 @@
             state.goals = [];
             state.habits = [];
             state.track = null;
+            document.getElementById('result-storage-consent').checked = false;
+            archiveSequence += 1;
+            archiveSaveId = null;
+            archiveSnapshot = null;
+            archiveSaveComplete = false;
+            archiveSaveBusy = false;
+            window.currentReportSummary = '';
+            for (const id of ['result-save-status', 'emergency-save-status']) {
+                document.getElementById(id).textContent = '';
+            }
+            for (const id of ['result-save-retry', 'emergency-save-retry']) {
+                document.getElementById(id).hidden = true;
+            }
 
             window.currentRecProducts = [];
             window.currentRecNutrients = [];
