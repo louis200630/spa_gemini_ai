@@ -89,7 +89,9 @@ export default async function handler(req, res) {
     if (!sameOrigin(req) || !String(req.headers['content-type'] || '').toLowerCase().startsWith('application/json'))
       return reply(res, 403, { error: '僅接受本網站送出的問卷結果。' });
     if (Number(req.headers['content-length'] || 0) > 48000) return reply(res, 413, { error: '結果資料過大。' });
-    const data = sanitize(req.body && typeof req.body === 'object' ? req.body : null);
+    let parsed = req.body;
+    try { if (typeof parsed === 'string') parsed = JSON.parse(parsed); } catch { parsed = null; }
+    const data = sanitize(parsed && typeof parsed === 'object' ? parsed : null);
     if (!data) return reply(res, 400, { error: '結果格式不完整。' });
     const content = JSON.stringify(data);
     if (Buffer.byteLength(content, 'utf8') > 46000) return reply(res, 413, { error: '結果資料過大。' });
