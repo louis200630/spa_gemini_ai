@@ -4402,22 +4402,27 @@
         document.getElementById('btn-share').addEventListener('click', () => {
             if (!window.currentRecProducts || !window.currentRecNutrients) return;
             
-            // 抓取全域變數中的營養素與產品名稱
-            const nutrientList = window.currentRecNutrients.join('\n• ');
-            const productList = window.currentRecProducts.map(p => p.name).join('\n• ');
+            // 逐行組合分享內容，避免多行模板字串的縮排被分享出去。
+            const nutrientLines = window.currentRecNutrients
+                .filter(name => name && String(name).trim())
+                .map(name => '• ' + String(name).trim());
+            const productLines = window.currentRecProducts
+                .filter(product => product && product.name && String(product.name).trim())
+                .map(product => '• ' + String(product.name).trim());
 
-            const shareText =
-                `【專屬精準營養推薦清單】
-
-📌 建議補充核心營養素：
-• ${nutrientList}
-
-🛒 專屬推薦清單：
-• ${productList}
-
-ℹ️ 本結果僅供日常健康管理與產品了解參考，不作為疾病診斷或治療依據。若正在服藥、懷孕或哺乳、有慢性疾病或其他特殊健康狀況，使用營養補充品前建議先與醫師或藥師確認。
-
-（此報告由互動式健康問卷系統依您的選擇自動整理）`;
+            const shareText = [
+                '【專屬精準營養推薦清單】',
+                '',
+                '📌 建議補充核心營養素：',
+                ...(nutrientLines.length ? nutrientLines : ['（目前沒有推薦的營養素）']),
+                '',
+                '🛒 專屬推薦清單：',
+                ...(productLines.length ? productLines : ['（目前沒有推薦的產品）']),
+                '',
+                'ℹ️ 本結果僅供日常健康管理與產品了解參考，不作為疾病診斷或治療依據。若正在服藥、懷孕或哺乳、有慢性疾病或其他特殊健康狀況，使用營養補充品前建議先與醫師或藥師確認。',
+                '',
+                '（此報告由互動式健康問卷系統依您的選擇自動整理）'
+            ].join('\n');
 
             if (navigator.share) {
                 navigator.share({
